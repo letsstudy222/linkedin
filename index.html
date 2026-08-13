@@ -495,6 +495,11 @@ svg { flex: none; }
 .icon.sm.undo { color: var(--muted); }
 .icon.sm.undo:hover { color: var(--red); border-color: var(--red-b); background: var(--red-s); }
 
+/* ---- nhãn số ngày lịch đã dời ---- */
+.shf { display: inline-block; margin-left: 7px; padding: 2px 7px; border-radius: 999px;
+  background: var(--red-s); color: var(--red); font-family: var(--mono); font-size: 10px;
+  font-weight: 700; letter-spacing: 0; text-transform: none; vertical-align: 1px; }
+
 /* ---- chip đồng bộ ---- */
 .sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border-radius: 999px;
   padding: 5px 11px; border: 1px solid var(--rule); background: var(--panel2); color: var(--muted); }
@@ -731,20 +736,52 @@ svg { flex: none; }
 
   /* Sửa lỗi cũ: block đã đóng nhưng chưa dời lịch (do bản trước còn tuỳ chọn thoả thuận).
      Chạy một lần cho mỗi tài khoản, có cờ đánh dấu để không dời chồng. */
-  /* Bản cũ cộng thẳng số ngày dời vào mốc. Bản này mốc phải là mốc GỐC,
-     nên trừ ngược đúng số ngày đã cộng trước đây, chạy đúng một lần. */
+  /* Dựng lại mốc GỐC từ lịch sử giao dịch, không tin vào con số dời đã ghi.
+     Mốc gốc kỳ đầu = hạn của lần trả/nhận đầu tiên từng ghi (khi đó chưa có block),
+     rồi cuộn thêm 1 tháng cho mỗi chu kỳ đã hoàn tất. Hoàn toàn xác định,
+     chạy lại bao nhiêu lần cũng ra một kết quả. */
   var fixReport = [];
-  function toBaseAnchors(a) {
-    if (a.baseV5) return a;
-    a.baseV5 = 1;
-    var apA = 0, apP = 0;
-    (a.blocks || []).forEach(function (b) { apA += num(b.shiftA); apP += num(b.shiftP); });
-    if (apA) a.anchor = addDays(a.anchor, -apA);
-    if (apP) a.payAnchor = addDays(a.payAnchor, -apP);
+  function rebase(a) {
+    var cd = num(a.payoutCycleDays) || 15;
+    var per = Math.max(1, Math.round(30 / cd));
+
+    var lg = (a.log || []).slice().sort(function (x, y) {
+      return String(x.dueOn).localeCompare(String(y.dueOn));
+    });
+    if (lg.length) {
+      var doneCyc = Math.floor(lg.length / 4);
+      a.anchor = addMonthsClamp(lg[0].dueOn, doneCyc, fromISO(lg[0].dueOn).getDate());
+      a.paidWeeks = lg.length % 4;
+    } else if (!a.anchor) {
+      a.anchor = a.rentDate || todayISO();
+    }
     a.anchorDay = fromISO(a.anchor).getDate();
+
+    var rg = (a.recvLog || []).slice().sort(function (x, y) {
+      return String(x.dueOn).localeCompare(String(y.dueOn));
+    });
+    if (rg.length) {
+      var doneR = Math.floor(rg.length / per);
+      a.payAnchor = addMonthsClamp(rg[0].dueOn, doneR, fromISO(rg[0].dueOn).getDate());
+      a.gotCount = rg.length % per;
+    } else if (!a.payAnchor) {
+      a.payAnchor = a.rentDate || todayISO();
+    }
     a.payAnchorDay = fromISO(a.payAnchor).getDate();
+    return a;
+  }
+
+  function toBaseAnchors(a) {
+    if (a.baseV6) return a;
+    a.baseV6 = 1;
+    var before = a.anchor + "|" + a.payAnchor;
+    /* dọn rác của bản cũ để không ai còn đọc nhầm */
+    (a.blocks || []).forEach(function (b) { delete b.shiftA; delete b.shiftP; });
+    rebase(a);
     var sh = shiftOf(a);
-    if (sh) fixReport.push(a.name + " (dời " + sh + " ngày)");
+    if (sh || before !== a.anchor + "|" + a.payAnchor) {
+      fixReport.push(a.name + (sh ? " (lịch dời " + sh + " ngày)" : " (dựng lại mốc)"));
+    }
     return a;
   }
 
@@ -1057,6 +1094,7 @@ svg { flex: none; }
         dm(paid && pDue[i] ? pDue[i] : d.dues[i]) + "</span>" +
         (paid ? '<span class="stamp">ĐÃ TRẢ</span>' : "") + "</div>";
     }
+    var shTxt = d.shift ? " (gốc " + dm(addDays(a.anchor, 0)) + ", đã dời " + d.shift + " ngày vì block)" : "";
     var dueText = d.status === "overdue" ? "trễ " + Math.abs(d.left) + " ngày"
       : d.left === 0 ? "hôm nay" : d.left === 1 ? "ngày mai" : "còn " + d.left + " ngày";
 
@@ -1082,7 +1120,7 @@ svg { flex: none; }
           ((a.log && a.log.length) ? '<button class="icon sm undo" data-act="undo" data-id="' + a.id +
             '" title="Hoàn tác lần trả gần nhất">' + ic("undo") + "</button>" : "") + "</div>" +
           '<div class="due-note">Tuần ' + Math.min(a.paidWeeks + 1, 4) + "/4 đến hạn <b>" + dmy(d.nextDue) +
-          "</b> — " + dueText + "</div>";
+          "</b> — " + dueText + shTxt + "</div>";
     }
 
     /* ---- khối chu kỳ nhận, đối xứng với chu kỳ trả ---- */
@@ -1103,8 +1141,9 @@ svg { flex: none; }
 
     var recvHTML = off ? "" :
       '<div class="perf"></div>' +
-      '<div class="cyc"><span class="cyc-l">Chu kỳ nhận · ' + d.cd + ' ngày</span><span class="cyc-v mono">' +
-      dm(d.payDues[0]) + " → " + dm(d.payDues[d.per - 1]) + "</span></div>" +
+      '<div class="cyc"><span class="cyc-l">Chu kỳ nhận · ' + d.cd + ' ngày' +
+      (d.shift ? '<b class="shf">+' + d.shift + ' ngày</b>' : "") +
+      '</span><span class="cyc-v mono">' + dm(d.payDues[0]) + " → " + dm(d.payDues[d.per - 1]) + "</span></div>" +
       '<div class="punch recv" style="grid-template-columns:repeat(' + d.per + ',1fr)">' + rPunch + "</div>" +
       (d.recvActive
         ? '<div class="pay"><button class="btn recv-btn" data-act="got" data-id="' + a.id + '">' +
@@ -1128,8 +1167,9 @@ svg { flex: none; }
       '<span class="badge ' + st[1] + '">' + st[0] + "</span></div>" +
       barHTML +
       '<div class="perf"></div>' +
-      '<div class="cyc"><span class="cyc-l">Chu kỳ trả</span><span class="cyc-v mono">' +
-      dm(d.dues[0]) + " → " + dm(d.dues[3]) + "</span></div>" +
+      '<div class="cyc"><span class="cyc-l">Chu kỳ trả' +
+      (d.shift ? '<b class="shf">+' + d.shift + ' ngày</b>' : "") +
+      '</span><span class="cyc-v mono">' + dm(d.dues[0]) + " → " + dm(d.dues[3]) + "</span></div>" +
       '<div class="punch">' + punch + "</div>" +
       actionHTML +
       recvHTML +
@@ -1931,8 +1971,14 @@ svg { flex: none; }
       });
       body += "</div>";
     }
-    body += '<p class="hint" style="margin-top:14px">Lịch được tính lại từ danh sách này mỗi lần vẽ. ' +
-      'Xoá một lần block thì mốc trả và mốc nhận tự lùi về đúng, không cần thao tác gì thêm.</p>';
+    body += '<div class="brow" style="margin-top:14px"><span class="brow-d">Mốc gốc (bỏ qua block)</span>' +
+      '<span class="brow-x mono">' + dmy(a.anchor) + " · " + dmy(a.payAnchor) + "</span>" +
+      '<span class="brow-n">Sau khi cộng ' + d.shift + " ngày block → trả <b>" + dmy(d.anc) +
+      "</b> · nhận <b>" + dmy(d.panc) + "</b></span></div>" +
+      '<p class="hint" style="margin-top:12px">Lịch tính lại từ danh sách này mỗi lần vẽ. ' +
+      'Xoá một lần block thì mốc tự lùi về đúng, không cần thao tác gì thêm.</p>' +
+      '<button class="btn" data-act="rebase" data-id="' + a.id + '">' + ic("rotate") +
+      " Dựng lại mốc gốc từ lịch sử giao dịch</button>";
     sheet("Lịch sử block · " + esc(a.name), body, '<button class="btn" data-act="close">Đóng</button>');
   }
 
@@ -2243,6 +2289,15 @@ svg { flex: none; }
       unblock(id, ut);
     }
     else if (act === "dropBlock") dropBlock(id, b.getAttribute("data-b"));
+    else if (act === "rebase") {
+      var ar = byId(id); if (!ar) return;
+      rebase(ar); save(); render();
+      var dr = derive(ar);
+      audit("Dựng lại mốc", ar.name, "gốc " + dmy(ar.anchor) + "/" + dmy(ar.payAnchor) +
+        " · dời " + dr.shift + " ngày");
+      toast("Mốc trả " + dmy(dr.anc) + " · mốc nhận " + dmy(dr.panc));
+      blockHistory(id);
+    }
 
     else if (act === "del") {
       var acc = byId(id);
