@@ -14,13 +14,15 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  --field:#E7ECE8; --panel:#FFFFFF; --panel2:#F5F8F5;
-  --ink:#16201C; --ink2:#485650; --muted:#7E8B84;
-  --rule:#D2DBD5; --rule2:#E4EAE5;
-  --carbon:#33307A; --carbon-s:#ECEBF6;
-  --red:#B0202C; --red-s:#FBEBEC;
-  --amber:#8C6206; --amber-s:#FAF1DE;
-  --green:#26654A; --green-s:#E6F0EA;
+  --field:#F3F2F7; --panel:#FFFFFF; --panel2:#F8F7FC;
+  --ink:#2A2839; --ink2:#5E5B75; --muted:#9694AB;
+  --rule:#E8E6F0; --rule2:#F1F0F7;
+  --carbon:#6360C9; --carbon-s:#EFEEFC; --carbon-d:#5350B4;
+  --red:#C2566B; --red-s:#FCEFF2; --red-b:#F2D6DD;
+  --amber:#B4843F; --amber-s:#FBF3E6; --amber-b:#EFDFC4;
+  --green:#4E937C; --green-s:#EAF4F0;
+  --shadow: 0 1px 2px rgba(42,40,57,.04), 0 6px 18px rgba(42,40,57,.055);
+  --shadow-lg: 0 24px 60px rgba(42,40,57,.22);
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --cond: "Arial Narrow", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -31,7 +33,7 @@ body {
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 input, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--carbon); outline-offset: 2px; border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--carbon); outline-offset: 2px; border-radius: 8px; }
 svg { flex: none; }
 .hide { display: none !important; }
 
@@ -40,7 +42,7 @@ svg { flex: none; }
 .hdr-in { max-width: 1180px; margin: 0 auto; padding: 11px 16px; display: flex; align-items: center; gap: 12px; }
 .brand { display: flex; align-items: baseline; gap: 7px; margin-right: auto; min-width: 0; }
 .mark { font-family: var(--cond); font-weight: 700; font-size: 13px; letter-spacing: .1em;
-  background: var(--carbon); color: #fff; padding: 3px 6px 2px; border-radius: 2px; }
+  background: var(--carbon); color: #fff; padding: 3px 6px 2px; border-radius: 5px; }
 .wordmark { font-family: var(--cond); font-weight: 700; font-size: 17px; letter-spacing: .16em;
   text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hdr-act { display: flex; align-items: center; gap: 7px; }
@@ -48,21 +50,21 @@ svg { flex: none; }
   border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px; color: var(--ink2); background: var(--panel2); }
 .chip:hover { border-color: var(--carbon); color: var(--carbon); }
 .icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
-  border-radius: 4px; color: var(--ink2); }
+  border-radius: 11px; color: var(--ink2); }
 .icon:hover { background: var(--panel2); color: var(--ink); }
 .icon.sm { width: 36px; height: 36px; border: 1px solid var(--rule); flex: none; }
 
 /* layout */
 .wrap { max-width: 1180px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.banner { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 4px; font-size: 13px;
-  background: var(--red-s); color: var(--red); border: 1px solid #EBCACD; }
+.banner { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 11px; font-size: 13px;
+  background: var(--red-s); color: var(--red); border: 1px solid var(--red-b); }
 
 /* nhắc hạn */
 .alerts { display: flex; flex-direction: column; gap: 8px; }
 .alerts:empty { display: none; }
-.alert { border-radius: 5px; padding: 10px 12px; border: 1px solid; }
-.a-red { background: var(--red-s); border-color: #EDCED1; }
-.a-amber { background: var(--amber-s); border-color: #EDDDBC; }
+.alert { border-radius: 13px; padding: 10px 12px; border: 1px solid; }
+.a-red { background: var(--red-s); border-color: var(--red-b); }
+.a-amber { background: var(--amber-s); border-color: var(--amber-b); }
 .alert-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .alert-t { font-family: var(--cond); font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
 .a-red .alert-t, .a-red .alert-s { color: var(--red); }
@@ -77,7 +79,7 @@ svg { flex: none; }
 
 /* thống kê */
 .rail { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--rule);
-  border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  border: 1px solid var(--rule); border-radius: 13px; overflow: hidden; }
 .stat { background: var(--panel); padding: 10px 12px; min-width: 0; }
 .stat-l { font-family: var(--cond); font-size: 11px; letter-spacing: .11em; text-transform: uppercase;
   color: var(--muted); font-weight: 700; }
@@ -87,12 +89,12 @@ svg { flex: none; }
 
 /* công cụ */
 .tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.seg { display: flex; background: var(--panel); border: 1px solid var(--rule); border-radius: 5px; padding: 2px; }
-.seg button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 3px;
+.seg { display: flex; background: var(--panel); border: 1px solid var(--rule); border-radius: 13px; padding: 2px; }
+.seg button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 8px;
   font-size: 13px; color: var(--ink2); }
 .seg button.on { background: var(--ink); color: #fff; }
 .search { display: flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--rule);
-  border-radius: 5px; padding: 0 9px; flex: 1; min-width: 170px; color: var(--muted); }
+  border-radius: 13px; padding: 0 9px; flex: 1; min-width: 170px; color: var(--muted); }
 .search input { border: none; background: none; outline: none; padding: 8px 0; width: 100%; font-size: 13.5px; }
 .clr { display: flex; color: var(--muted); }
 .filters { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -102,7 +104,7 @@ svg { flex: none; }
 
 /* thẻ */
 .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
-.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 13px 14px 10px;
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 16px; padding: 13px 14px 10px;
   display: flex; flex-direction: column; }
 .card.is-off { opacity: .62; }
 .c-top { display: flex; gap: 10px; align-items: flex-start; }
@@ -111,12 +113,101 @@ svg { flex: none; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .c-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 .badge { font-family: var(--cond); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  padding: 3px 7px; border-radius: 3px; white-space: nowrap; flex: none; }
+  padding: 3px 7px; border-radius: 8px; white-space: nowrap; flex: none; }
 .s-red { background: var(--red-s); color: var(--red); }
 .s-amber { background: var(--amber-s); color: var(--amber); }
 .s-green { background: var(--green-s); color: var(--green); }
 .s-off { background: var(--panel2); color: var(--muted); }
+.s-block { background: var(--carbon); color: #fff; }
+.card.is-blocked { border-color: #D3D1F0; box-shadow: inset 3px 0 0 var(--carbon); }
+.card.is-blocked .punch { opacity: .42; }
+.bar { display: flex; align-items: center; gap: 8px; background: var(--carbon-s); border: 1px solid #DFDDF6;
+  border-radius: 11px; padding: 9px 11px; margin-top: 10px; font-size: 12.5px; color: var(--carbon); }
+.bar b { font-weight: 700; }
+.unblock { flex: 1; justify-content: center; background: var(--carbon); color: #fff; border-color: var(--carbon); }
+.unblock:hover { background: var(--carbon-d); }
+.binfo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11.5px;
+  color: var(--muted); margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--rule2); }
+.binfo .bad { color: var(--red); font-weight: 600; }
+.a-slate { background: var(--carbon-s); border-color: #DFDDF6; }
+.a-slate .alert-t, .a-slate .alert-s { color: var(--carbon); }
+.blist { display: flex; flex-direction: column; gap: 8px; }
+.brow { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; border: 1px solid var(--rule);
+  border-radius: 11px; padding: 9px 11px; }
+.brow.open { border-color: var(--carbon); background: var(--carbon-s); }
+.brow-d { font-size: 13px; font-weight: 600; }
+.brow-x { font-size: 12px; text-align: right; white-space: nowrap; color: var(--ink2); }
+.brow-n { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); }
+.brow-a { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center;
+  margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--rule); }
+.brow-s { font-size: 11px; color: var(--muted); }
 .perf { height: 1px; margin: 11px -14px; border-top: 1px dashed var(--rule); }
+
+/* hàng đợi việc hôm nay */
+.queue { background: var(--panel); border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; }
+.q-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  padding: 9px 13px; background: var(--ink); color: #fff; }
+.q-t { font-family: var(--cond); font-weight: 700; font-size: 12.5px; letter-spacing: .13em; text-transform: uppercase; }
+.q-s { font-family: var(--mono); font-size: 12px; opacity: .82; }
+.q-row { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-bottom: 1px solid var(--rule2); }
+.q-row:last-child { border-bottom: none; }
+.q-n { font-family: var(--mono); font-size: 11px; width: 17px; height: 17px; flex: none; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; background: var(--panel2); color: var(--muted); }
+.q-row.p-0 .q-n { background: var(--red); color: #fff; }
+.q-row.p-1 .q-n { background: var(--amber); color: #fff; }
+.q-row.p-2 .q-n { background: var(--carbon); color: #fff; }
+.q-name { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-why { font-size: 11.5px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+.q-row.p-0 .q-why { color: var(--red); font-weight: 600; }
+.q-amt { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.q-btn { flex: none; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--rule); background: var(--panel2); }
+.q-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+.q-more { padding: 8px 13px; background: var(--panel2); font-size: 11.5px; color: var(--muted); }
+.q-more b { color: var(--ink2); }
+.queue.calm .q-h { background: var(--green-s); color: var(--green); }
+.calm-b { padding: 10px 13px; font-size: 12.5px; color: var(--ink2); }
+
+/* dòng nhận định danh mục */
+.insight { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--muted);
+  padding: 0 2px; margin-top: -4px; }
+.insight b { color: var(--ink2); font-weight: 600; }
+.insight .bad { color: var(--red); }
+
+/* nhận định trên thẻ */
+.card { position: relative; }
+.card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 16px 0 0 16px; background: transparent; }
+.card.v-keep::before { background: var(--green); }
+.card.v-watch::before { background: var(--amber); }
+.card.v-drop::before { background: var(--red); }
+.card.v-new::before { background: var(--rule); }
+
+/* lưới chỉ số */
+.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule2);
+  border: 1px solid var(--rule2); border-radius: 13px; overflow: hidden; }
+.m { background: var(--panel); padding: 8px 10px; min-width: 0; }
+.m-l { font-family: var(--cond); font-size: 10px; letter-spacing: .11em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; }
+.m-v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14.5px; font-weight: 600;
+  margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-s { font-size: 10.5px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mfoot { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; color: var(--muted); margin-top: 7px; }
+.mfoot b { color: var(--ink2); font-family: var(--mono); }
+
+/* thanh thời gian chết */
+.tl { margin-top: 11px; }
+.tl-bar { height: 6px; border-radius: 8px; overflow: hidden; background: var(--green-s); }
+.tl-cap { display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+.vd { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.vd::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.vd.v-keep { color: var(--green); } .vd.v-watch { color: var(--amber); }
+.vd.v-drop { color: var(--red); } .vd.v-new { color: var(--muted); }
+
+/* sắp xếp */
+.sortsel { border: 1px solid var(--rule); background: var(--panel); border-radius: 13px; padding: 7px 9px;
+  font-size: 12.5px; color: var(--ink2); outline: none; }
+.sortsel:focus { border-color: var(--carbon); }
 .cyc { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
 .cyc-l { font-family: var(--cond); font-size: 11px; letter-spacing: .11em; text-transform: uppercase;
   color: var(--muted); font-weight: 700; }
@@ -124,7 +215,7 @@ svg { flex: none; }
 
 /* ô đánh dấu */
 .punch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.cell { position: relative; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel2);
+.cell { position: relative; border: 1px solid var(--rule); border-radius: 11px; background: var(--panel2);
   padding: 8px 4px 7px; text-align: center; overflow: hidden; }
 .cell-w { display: block; font-family: var(--cond); font-size: 10.5px; letter-spacing: .1em; font-weight: 700; color: var(--muted); }
 .cell-d { display: block; font-size: 12px; margin-top: 1px; color: var(--ink2); }
@@ -136,14 +227,14 @@ svg { flex: none; }
 .cell.paid .cell-w, .cell.paid .cell-d { color: var(--rule); }
 .stamp { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-family: var(--cond); font-size: 11px; font-weight: 700; letter-spacing: .06em;
-  color: var(--carbon); border: 1.5px solid var(--carbon); border-radius: 3px;
+  color: var(--carbon); border: 1.5px solid var(--carbon); border-radius: 8px;
   transform: rotate(-7deg) scale(.94); opacity: .82; background: rgba(255,255,255,.55);
   animation: stampIn .22s cubic-bezier(.2,1.4,.5,1); }
 @keyframes stampIn { from { transform: rotate(-7deg) scale(1.5); opacity: 0; } }
 
 .pay { display: flex; gap: 7px; margin-top: 10px; }
 .pay-btn { flex: 1; justify-content: center; background: var(--carbon); color: #fff; border-color: var(--carbon); }
-.pay-btn:hover { background: #2A2765; }
+.pay-btn:hover { background: var(--carbon-d); }
 .due-note { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
 .due-note b { color: var(--ink2); }
 .fin { margin: 0; display: flex; flex-direction: column; gap: 5px; }
@@ -152,7 +243,7 @@ svg { flex: none; }
 .fin dd { margin: 0; font-size: 13px; font-weight: 600; text-align: right; }
 .fin .u { font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 5px; }
 .note { margin: 10px 0 0; font-size: 12px; color: var(--ink2); background: var(--panel2);
-  border-left: 2px solid var(--rule); padding: 6px 9px; border-radius: 0 3px 3px 0; white-space: pre-wrap; }
+  border-left: 2px solid var(--rule); padding: 6px 9px; border-radius: 0 8px 8px 0; white-space: pre-wrap; }
 .c-act { display: flex; gap: 14px; margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--rule2); }
 .link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
 .link:hover { color: var(--carbon); }
@@ -161,7 +252,7 @@ svg { flex: none; }
 
 /* sổ chi */
 .ledger { display: flex; flex-direction: column; gap: 12px; }
-.lmonth { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.lmonth { background: var(--panel); border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; }
 .lmonth-h { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 13px;
   background: var(--panel2); border-bottom: 1px solid var(--rule); font-family: var(--cond); font-weight: 700;
   font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; }
@@ -175,7 +266,7 @@ svg { flex: none; }
 .lt-a { text-align: right; white-space: nowrap; }
 
 /* rỗng */
-.empty { background: var(--panel); border: 1px dashed var(--rule); border-radius: 6px; padding: 40px 22px;
+.empty { background: var(--panel); border: 1px dashed var(--rule); border-radius: 16px; padding: 40px 22px;
   text-align: center; color: var(--muted); }
 .empty svg { color: var(--rule); }
 .empty h3 { margin: 10px 0 4px; font-size: 15px; color: var(--ink); }
@@ -184,22 +275,22 @@ svg { flex: none; }
 .foot b { color: var(--ink2); }
 
 /* nút */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 13px; border-radius: 4px;
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 13px; border-radius: 11px;
   border: 1px solid var(--rule); background: var(--panel); font-size: 13px; font-weight: 500; }
 .btn:hover { border-color: var(--ink2); }
 .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
-.btn.primary:hover { background: #000; }
-.btn.danger { color: var(--red); border-color: #E7C8CB; background: var(--red-s); }
-.btn.danger:hover { background: #F6DEE0; }
+.btn.primary:hover { background: #3B3950; }
+.btn.danger { color: var(--red); border-color: var(--red-b); background: var(--red-s); }
+.btn.danger:hover { background: #F8E3E8; }
 .fab { display: none; }
 
 /* lớp phủ */
-.ov { position: fixed; inset: 0; z-index: 60; background: rgba(20,28,24,.4); -webkit-backdrop-filter: blur(2px);
+.ov { position: fixed; inset: 0; z-index: 60; background: rgba(42,40,57,.34); -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; padding: 18px;
   animation: fade .15s ease; }
 @keyframes fade { from { opacity: 0; } }
-.sheet { background: var(--panel); border-radius: 8px; width: 100%; max-width: 420px; max-height: 90vh;
-  display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.28); animation: rise .2s ease; }
+.sheet { background: var(--panel); border-radius: 20px; width: 100%; max-width: 420px; max-height: 90vh;
+  display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(42,40,57,.22); animation: rise .2s ease; }
 .sheet.wide { max-width: 520px; }
 @keyframes rise { from { transform: translateY(14px); opacity: 0; } }
 .sheet-h { display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -208,7 +299,7 @@ svg { flex: none; }
   text-transform: uppercase; }
 .sheet-b { padding: 16px 17px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .sheet-f { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 17px;
-  border-top: 1px solid var(--rule); background: var(--panel2); border-radius: 0 0 8px 8px; }
+  border-top: 1px solid var(--rule); background: var(--panel2); border-radius: 0 0 20px 20px; }
 .sheet-f .btn { flex: 1; justify-content: center; }
 
 /* biểu mẫu */
@@ -217,8 +308,8 @@ svg { flex: none; }
 .sec.first { margin-top: 0; }
 .fl { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-bottom: 5px; }
 .tag { font-family: var(--cond); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-  background: var(--carbon-s); color: var(--carbon); padding: 2px 5px; border-radius: 2px; margin-left: 6px; }
-.in { width: 100%; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel);
+  background: var(--carbon-s); color: var(--carbon); padding: 2px 5px; border-radius: 5px; margin-left: 6px; }
+.in { width: 100%; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 11px; background: var(--panel);
   font-size: 16px; outline: none; }
 .in:focus { border-color: var(--carbon); box-shadow: 0 0 0 3px var(--carbon-s); }
 .in.bad { border-color: var(--red); }
@@ -229,7 +320,7 @@ svg { flex: none; }
 .hint b { color: var(--carbon); }
 .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 .chips { display: flex; gap: 6px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-.c { padding: 8px 12px; border: 1px solid var(--rule); border-radius: 4px; font-size: 13px; background: var(--panel); }
+.c { padding: 8px 12px; border: 1px solid var(--rule); border-radius: 11px; font-size: 13px; background: var(--panel); }
 .c.on { background: var(--carbon); border-color: var(--carbon); color: #fff; }
 .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink2); margin: 4px 0 8px; cursor: pointer; }
 .check input { margin-top: 2px; accent-color: var(--carbon); width: 16px; height: 16px; }
@@ -238,7 +329,7 @@ svg { flex: none; }
 .rule { height: 1px; background: var(--rule); margin: 18px 0; }
 .ask { font-size: 13.5px; margin: 0 0 8px; }
 .preview { display: flex; justify-content: space-between; align-items: center; padding: 11px 13px;
-  border-radius: 5px; margin-top: 18px; font-size: 13px; }
+  border-radius: 13px; margin-top: 18px; font-size: 13px; }
 .preview.ok { background: var(--green-s); color: var(--green); }
 .preview.bad { background: var(--red-s); color: var(--red); }
 .preview b { font-size: 15px; }
@@ -246,7 +337,7 @@ svg { flex: none; }
 /* thông báo */
 .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 80;
   background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13px;
-  max-width: 92vw; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: rise .2s ease; }
+  max-width: 92vw; text-align: center; box-shadow: 0 8px 24px rgba(42,40,57,.22); animation: rise .2s ease; }
 
 @media (max-width: 900px) {
   .rail { grid-template-columns: repeat(2, 1fr); }
@@ -262,17 +353,87 @@ svg { flex: none; }
   .filters { order: 3; width: 100%; overflow-x: auto; padding-bottom: 2px; }
   .seg { order: 1; flex: 1; }
   .seg button { flex: 1; justify-content: center; }
+  #sortWrap { order: 4; width: 100%; }
+  .sortsel { width: 100%; }
+  .q-why { display: none; }
+  .q-row { gap: 8px; padding: 10px 12px; }
+  .mgrid { grid-template-columns: 1fr 1fr; }
   .cell { padding: 10px 2px 9px; }
   .pay-btn { padding: 12px 13px; }
   .fab { display: flex; align-items: center; justify-content: center; position: fixed; right: 16px;
     bottom: calc(18px + env(safe-area-inset-bottom)); width: 54px; height: 54px; border-radius: 50%;
-    background: var(--carbon); color: #fff; z-index: 40; box-shadow: 0 6px 18px rgba(51,48,122,.4); }
+    background: var(--carbon); color: #fff; z-index: 40; box-shadow: 0 6px 18px rgba(99,96,201,.34); }
   .ov { padding: 0; align-items: flex-end; }
-  .sheet, .sheet.wide { max-width: 100%; max-height: 94vh; border-radius: 12px 12px 0 0; }
+  .sheet, .sheet.wide { max-width: 100%; max-height: 94vh; border-radius: 20px 20px 0 0; }
   .sheet-f { border-radius: 0; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
   .toast { bottom: 84px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---- lớp làm mềm ---- */
+.card, .queue, .rail, .lmonth { box-shadow: var(--shadow); border-color: var(--rule2); }
+.card { padding: 15px 16px 12px; transition: box-shadow .18s ease, transform .18s ease; }
+.card:hover { box-shadow: 0 2px 4px rgba(42,40,57,.05), 0 10px 26px rgba(42,40,57,.08); }
+.card::before { width: 4px; border-radius: 16px 0 0 16px; opacity: .85; }
+.perf { margin: 12px -16px; border-top-color: var(--rule2); }
+
+.q-h { background: var(--carbon-s); color: var(--carbon); border-bottom: 1px solid var(--rule2); }
+.q-s { opacity: 1; color: var(--carbon); }
+.q-row { padding: 11px 15px; }
+.q-btn { padding: 6px 13px; background: var(--panel); border-color: var(--rule); transition: all .15s ease; }
+.q-btn:hover { background: var(--carbon); border-color: var(--carbon); color: #fff; }
+.q-n { border-radius: 999px; width: 19px; height: 19px; font-size: 10.5px; }
+.q-more { background: var(--panel2); border-top: 1px solid var(--rule2); }
+.queue.calm .q-h { background: var(--green-s); color: var(--green); }
+
+.hdr { border-bottom-color: var(--rule2); box-shadow: 0 1px 3px rgba(42,40,57,.03); }
+.mark { border-radius: 7px; padding: 4px 7px 3px; }
+.wordmark { letter-spacing: .13em; }
+.stat { padding: 12px 14px; }
+.badge { padding: 4px 10px; border-radius: 999px; letter-spacing: .06em; }
+.cell { padding: 10px 4px 9px; background: var(--panel2); border-color: var(--rule2); }
+.cell.paid { background: var(--panel); }
+.stamp { border-width: 1.25px; opacity: .7; transform: rotate(-6deg) scale(.92);
+  background: rgba(255,255,255,.62); border-radius: 8px; }
+@keyframes stampIn { from { transform: rotate(-6deg) scale(1.45); opacity: 0; } }
+.btn { padding: 10px 15px; transition: all .15s ease; }
+.pay-btn, .unblock { box-shadow: 0 2px 8px rgba(99,96,201,.22); }
+.f, .c, .pill, .chip { transition: all .15s ease; }
+.mgrid { border-color: var(--rule2); background: var(--rule2); }
+.m { padding: 10px 12px; }
+.tl-bar { height: 7px; border-radius: 999px; }
+.in { padding: 11px 13px; border-color: var(--rule); }
+.in:focus { box-shadow: 0 0 0 4px var(--carbon-s); }
+.sec { color: var(--ink2); border-bottom-color: var(--rule2); letter-spacing: .11em; }
+.sheet { box-shadow: var(--shadow-lg); }
+.sheet-h, .sheet-f { border-color: var(--rule2); }
+.toast { background: var(--ink); box-shadow: 0 10px 30px rgba(42,40,57,.28); }
+.empty { border-color: var(--rule); background: var(--panel); }
+.bar { border-color: #DFDDF6; }
+.note { border-left-color: var(--carbon-s); border-left-width: 3px; background: var(--panel2); }
+
+/* ---- chip đồng bộ ---- */
+.sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border-radius: 999px;
+  padding: 5px 11px; border: 1px solid var(--rule); background: var(--panel2); color: var(--muted); }
+.sync .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--muted); flex: none; }
+.sync.on { color: var(--green); border-color: #CFE6DC; background: var(--green-s); }
+.sync.on .dot { background: var(--green); }
+.sync.busy { color: var(--carbon); border-color: #DFDDF6; background: var(--carbon-s); }
+.sync.busy .dot { background: var(--carbon); animation: pulse 1s ease-in-out infinite; }
+.sync.err { color: var(--red); border-color: var(--red-b); background: var(--red-s); }
+.sync.err .dot { background: var(--red); }
+@keyframes pulse { 50% { opacity: .3; } }
+.sync-lbl { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-radius: 13px;
+  background: var(--green-s); color: var(--green); font-size: 13px; margin-bottom: 14px; }
+.acct b { font-weight: 700; }
+.sqlbox { font-family: var(--mono); font-size: 11px; background: var(--ink); color: #E9E8F2;
+  padding: 12px 13px; border-radius: 11px; white-space: pre; overflow-x: auto; line-height: 1.6; margin: 8px 0 12px; }
+@media (max-width: 640px) {
+  .sync-lbl { display: none; }
+  .card { padding: 14px 14px 11px; }
+  .perf { margin: 12px -14px; }
+}
 </style>
 </head>
 <body>
@@ -281,6 +442,9 @@ svg { flex: none; }
   <div class="hdr-in">
     <div class="brand"><span class="mark">SỔ</span><span class="wordmark">Thuê tài khoản</span></div>
     <div class="hdr-act">
+      <button class="sync" id="syncChip" data-act="cloud" title="Đồng bộ đám mây">
+        <span class="dot"></span><span class="sync-lbl" id="syncLbl">Chưa đồng bộ</span>
+      </button>
       <button class="chip" data-act="settings" title="Tỷ giá quy đổi"><span data-ic="coins"></span><span id="rateChip">26.000</span></button>
       <button class="icon" data-act="settings" aria-label="Cài đặt"><span data-ic="settings"></span></button>
       <button class="btn primary add-top" data-act="add"><span data-ic="plus"></span> Thêm tài khoản</button>
@@ -306,8 +470,18 @@ svg { flex: none; }
     <div class="filters" id="filters">
       <button class="f on" data-act="filter" data-v="all">Đang thuê</button>
       <button class="f" data-act="filter" data-v="overdue">Quá hạn</button>
-      <button class="f" data-act="filter" data-v="due">Sắp tới</button>
+      <button class="f" data-act="filter" data-v="block">Đang block</button>
+      <button class="f" data-act="filter" data-v="risk">Cần xem lại</button>
       <button class="f" data-act="filter" data-v="off">Đã ngưng</button>
+    </div>
+    <div id="sortWrap">
+      <select class="sortsel" id="sortSel">
+        <option value="urgent">Ưu tiên xử lý</option>
+        <option value="risk">Rủi ro cao trước</option>
+        <option value="profit">Lãi thực cao trước</option>
+        <option value="uptime">Uptime thấp trước</option>
+        <option value="name">Tên A→Z</option>
+      </select>
     </div>
   </div>
 
@@ -394,21 +568,77 @@ svg { flex: none; }
   var mem = null, canStore = true;
   try { localStorage.setItem("__t", "1"); localStorage.removeItem("__t"); } catch (e) { canStore = false; }
 
-  var S = { accounts: [], rate: 26000, tab: "accounts", filter: "all", q: "" };
+  var S = { accounts: [], rate: 26000, tab: "accounts", filter: "all", q: "", sort: "urgent",
+    minUptime: 90, minMargin: 30, updatedAt: "" };
+
+  /* nhận định: app tự đưa ra kết luận thay vì bắt người dùng tự đọc số */
+  function verdict(d) {
+    var up = d.uptime * 100;
+    var mg = d.inVND > 0 ? d.realProfit / d.inVND * 100 : 0;
+    if (d.span < 14) return { k: "new", l: "Mới thuê", r: "còn " + (14 - d.span) + " ngày nữa mới đủ dữ liệu" };
+    if (d.realProfit < 0) return { k: "drop", l: "Đang lỗ", r: "lãi thực tế âm" };
+    if (up < S.minUptime * 0.85 || mg < S.minMargin * 0.5)
+      return { k: "drop", l: "Cân nhắc bỏ", r: up < S.minUptime * 0.85 ? "uptime " + Math.round(up) + "% quá thấp" : "biên thực chỉ " + Math.round(mg) + "%" };
+    if (up < S.minUptime || mg < S.minMargin)
+      return { k: "watch", l: "Theo dõi", r: up < S.minUptime ? "uptime " + Math.round(up) + "% dưới ngưỡng" : "biên thực " + Math.round(mg) + "% dưới ngưỡng" };
+    return { k: "keep", l: "Giữ", r: "uptime " + Math.round(up) + "% · biên " + Math.round(mg) + "%" };
+  }
+
+  /* thanh thời gian chết: vẽ bằng một gradient duy nhất, không tạo 90 thẻ con */
+  function timelineBG(a, d) {
+    var today = todayISO(), span = d.span, w0 = addDays(today, -(span - 1)), end = addDays(today, 1);
+    var segs = [];
+    (a.blocks || []).forEach(function (b) {
+      var s = b.from > w0 ? b.from : w0;
+      var e = b.to || end; if (e > end) e = end;
+      var s0 = diffDays(w0, s), e0 = diffDays(w0, e);
+      if (e0 > s0) segs.push([Math.max(0, s0 / span * 100), Math.min(100, e0 / span * 100)]);
+    });
+    if (!segs.length) return "var(--green-s)";
+    segs.sort(function (x, y) { return x[0] - y[0]; });
+    var parts = [], pos = 0;
+    segs.forEach(function (s) {
+      if (s[0] > pos) parts.push("var(--green-s) " + pos + "%", "var(--green-s) " + s[0] + "%");
+      parts.push("var(--red) " + Math.max(s[0], pos) + "%", "var(--red) " + s[1] + "%");
+      pos = s[1];
+    });
+    parts.push("var(--green-s) " + pos + "%", "var(--green-s) 100%");
+    return "linear-gradient(90deg," + parts.join(",") + ")";
+  }
+
+  /* sổ lưu từ bản cũ chưa có trường block -> bổ sung để không vỡ */
+  function migrate(a) {
+    if (!Array.isArray(a.blocks)) a.blocks = [];
+    if (typeof a.payoutShift !== "number") a.payoutShift = 0;
+    if (!a.blockPolicy) a.blockPolicy = "both";
+    if (!Array.isArray(a.log)) a.log = [];
+    if (typeof a.paidWeeks !== "number") a.paidWeeks = 0;
+    if (!a.anchorDay) a.anchorDay = fromISO(a.anchor || a.rentDate || todayISO()).getDate();
+    return a;
+  }
 
   function load() {
     try {
       var raw = canStore ? localStorage.getItem(KEY) : mem;
       if (!raw) return;
       var d = JSON.parse(raw);
-      if (Array.isArray(d.accounts)) S.accounts = d.accounts;
+      if (Array.isArray(d.accounts)) S.accounts = d.accounts.map(migrate);
       if (d.rate) S.rate = Number(d.rate) || 26000;
+      if (d.minUptime) S.minUptime = Number(d.minUptime) || 90;
+      if (d.minMargin) S.minMargin = Number(d.minMargin) || 30;
+      if (d.updatedAt) S.updatedAt = d.updatedAt;
     } catch (e) { warn("Không đọc được dữ liệu đã lưu. Sổ mở ở trạng thái trống."); }
   }
-  function save() {
-    var raw = JSON.stringify({ accounts: S.accounts, rate: S.rate, v: 1 });
+  function saveLocal() {
+    var raw = JSON.stringify({ accounts: S.accounts, rate: S.rate,
+      minUptime: S.minUptime, minMargin: S.minMargin, updatedAt: S.updatedAt, v: 2 });
     try { if (canStore) localStorage.setItem(KEY, raw); else mem = raw; }
     catch (e) { warn("Chưa lưu được. Bộ nhớ trình duyệt đầy hoặc đang ở chế độ ẩn danh."); }
+  }
+  function save() {
+    S.updatedAt = new Date().toISOString();
+    saveLocal();
+    schedulePush();
   }
   function warn(m) {
     var w = document.getElementById("warn");
@@ -418,6 +648,9 @@ svg { flex: none; }
 
   /* ---------------- nghiệp vụ ---------------- */
   function weekDues(anchor) { return [0, 7, 14, 21].map(function (n) { return addDays(anchor, n); }); }
+
+  /* số ngày mất của một lần block; chưa mở thì tính đến hôm nay */
+  function blockDays(b, today) { return Math.max(0, diffDays(b.from, b.to || today)); }
 
   function derive(a) {
     var today = todayISO(), dues = weekDues(a.anchor);
@@ -430,22 +663,109 @@ svg { flex: none; }
     var margin = inVND > 0 ? profit / inVND : 0;
     var cd = num(a.payoutCycleDays) || 15;
     var perUSD = a.perPayoutManual ? num(a.perPayoutUSD) : num(a.monthlyIncomeUSD) * cd / 30;
-    var np = a.rentDate || today, g = 0;
-    while (diffDays(today, np) < 0 && g < 600) { np = addDays(np, cd); g++; }
+    var np = addDays(a.rentDate || today, num(a.payoutShift)), g = 0;
+    while (diffDays(today, np) < 0 && g < 900) { np = addDays(np, cd); g++; }
+
+    /* ---- block ---- */
+    var pol = a.blockPolicy || "both";
+    var blocks = a.blocks || [], cur = null, totalDays = 0;
+    for (var i = 0; i < blocks.length; i++) {
+      if (!blocks[i].to) cur = blocks[i];
+      totalDays += blockDays(blocks[i], today);
+    }
+    var curDays = cur ? blockDays(cur, today) : 0;
+
+    /* uptime tính trên tối đa 90 ngày gần nhất, không vượt quá thời gian đã thuê */
+    var span = Math.min(90, Math.max(1, diffDays(a.rentDate || today, today) + 1));
+    var w0 = addDays(today, -(span - 1)), lost = 0;
+    blocks.forEach(function (b) {
+      var s = b.from > w0 ? b.from : w0;
+      var e = b.to || today;
+      if (e > today) e = today;
+      var d = diffDays(s, e);
+      if (d > 0) lost += d;
+    });
+    if (lost > span) lost = span;
+    var uptime = (span - lost) / span;
+
+    /* lãi thực tế: thu luôn giảm theo uptime; chi chỉ giảm nếu thoả thuận dừng cả hai */
+    var effIn = inVND * uptime;
+    var effOut = pol === "both" ? outVND * uptime : outVND;
+    var realProfit = effIn - effOut;
+
+    /* đang block + thoả thuận dừng cả hai => chưa phát sinh nghĩa vụ trả */
+    var dueActive = !(cur && pol === "both");
+
     var st = "ok";
     if (a.active === false) st = "off";
+    else if (cur) st = "blocked";
     else if (left < 0) st = "overdue";
     else if (left === 0) st = "today";
     else if (left === 1) st = "tomorrow";
     else if (left <= 7) st = "soon";
+
     return { dues: dues, nextDue: nextDue, left: left, weekly: weekly, inVND: inVND, outVND: outVND,
-      profit: profit, margin: margin, perUSD: perUSD, nextPayout: np, status: st, cd: cd };
+      profit: profit, margin: margin, perUSD: perUSD, nextPayout: np, status: st, cd: cd,
+      pol: pol, cur: cur, curDays: curDays, blockCount: blocks.length, blockDaysTotal: totalDays,
+      uptime: uptime, span: span, realProfit: realProfit, dueActive: dueActive };
   }
 
   var ST = {
     overdue: ["Quá hạn", "s-red"], today: ["Đến hạn hôm nay", "s-red"], tomorrow: ["Đến hạn ngày mai", "s-amber"],
-    soon: ["Sắp đến hạn", "s-amber"], ok: ["Trong hạn", "s-green"], off: ["Đã ngưng", "s-off"]
+    soon: ["Sắp đến hạn", "s-amber"], ok: ["Trong hạn", "s-green"], off: ["Đã ngưng", "s-off"],
+    blocked: ["Đang bị block", "s-block"]
   };
+
+  var POL = { both: "Dừng cả hai — không nhận tiền, không phải trả" };
+
+  /* ---- ghi block / mở block ---- */
+  function addBlock(id, from, reason) {
+    var a = byId(id); if (!a) return;
+    a.blocks = a.blocks || [];
+    for (var i = 0; i < a.blocks.length; i++) if (!a.blocks[i].to) return;
+    a.blocks.push({ id: uid(), from: from, to: null, reason: reason || "", shiftA: 0, shiftP: 0 });
+    save(); closeModal(); render();
+    toast(a.name + ": đã ghi nhận block từ " + dmy(from));
+  }
+
+  function unblock(id, to) {
+    var a = byId(id); if (!a) return;
+    var cur = null;
+    (a.blocks || []).forEach(function (b) { if (!b.to) cur = b; });
+    if (!cur) return;
+    if (to < cur.from) { toast("Ngày mở phải sau ngày bị block"); return; }
+    var days = diffDays(cur.from, to);
+    var pol = a.blockPolicy || "both";
+    cur.to = to; cur.days = days; cur.shiftA = 0; cur.shiftP = 0;
+    if (days > 0) {
+      if (pol === "both") {
+        a.anchor = addDays(a.anchor, days);
+        a.anchorDay = fromISO(a.anchor).getDate();
+        cur.shiftA = days;
+      }
+      if (pol === "both" || pol === "payout") {
+        a.payoutShift = num(a.payoutShift) + days;
+        cur.shiftP = days;
+      }
+    }
+    save(); closeModal(); render();
+    toast(a.name + ": mở lại sau " + days + " ngày" + (cur.shiftA ? " · mốc trả dời sang " + dmy(a.anchor) : ""));
+  }
+
+  /* xoá một lần block: hoàn lại đúng số ngày đã dời */
+  function dropBlock(accId, bId) {
+    var a = byId(accId); if (!a || !a.blocks) return;
+    var keep = [];
+    a.blocks.forEach(function (b) {
+      if (b.id === bId) {
+        if (b.shiftA) { a.anchor = addDays(a.anchor, -b.shiftA); a.anchorDay = fromISO(a.anchor).getDate(); }
+        if (b.shiftP) a.payoutShift = num(a.payoutShift) - b.shiftP;
+      } else keep.push(b);
+    });
+    a.blocks = keep;
+    save(); render(); toast("Đã xoá lần block và hoàn lại lịch cũ");
+    blockHistory(accId);
+  }
 
   function byId(id) { for (var i = 0; i < S.accounts.length; i++) if (S.accounts[i].id === id) return S.accounts[i]; return null; }
 
@@ -481,18 +801,6 @@ svg { flex: none; }
       (tone ? " t-" + tone : "") + '">' + m + '</div><div class="stat-s">' + s + "</div></div>";
   }
 
-  function alertBlock(tone, title, rows) {
-    var sum = 0, b = "";
-    rows.forEach(function (r) {
-      sum += r.d.weekly;
-      b += '<button class="pill" data-act="pay" data-id="' + r.a.id + '" title="Đánh dấu đã trả">' +
-        '<span class="pill-n">' + esc(r.a.name) + '</span><span class="pill-v mono">' + vndShort(r.d.weekly) +
-        "</span>" + ic("check", 12) + "</button>";
-    });
-    return '<div class="alert a-' + tone + '"><div class="alert-h"><span class="alert-t">' + title +
-      '</span><span class="alert-s mono">' + vnd(sum) + '</span></div><div class="alert-b">' + b + "</div></div>";
-  }
-
   function cardHTML(a, d) {
     var st = ST[d.status], off = a.active === false;
     var punch = "";
@@ -505,36 +813,137 @@ svg { flex: none; }
     var dueText = d.status === "overdue" ? "trễ " + Math.abs(d.left) + " ngày"
       : d.left === 0 ? "hôm nay" : d.left === 1 ? "ngày mai" : "còn " + d.left + " ngày";
 
-    return '<article class="card' + (off ? " is-off" : "") + '">' +
+    /* thanh trạng thái khi đang bị block */
+    var barHTML = "";
+    if (d.cur) {
+      barHTML = '<div class="bar">' + ic("power") + "<span>Bị block từ <b>" + dmy(d.cur.from) + "</b> — " +
+        (d.curDays === 0 ? "từ hôm nay" : "<b>" + d.curDays + "</b> ngày") +
+        ". Lịch trả và ngày nhận tiền đang tạm dừng.</span></div>";
+    }
+
+    var upPct = Math.round(d.uptime * 100);
+    var v = verdict(d);
+
+    /* nút hành động chính: đang block thì ưu tiên mở lại */
+    var actionHTML = "";
+    if (!off) {
+      actionHTML = d.cur
+        ? '<div class="pay"><button class="btn unblock" data-act="unblockDlg" data-id="' + a.id + '">' +
+          ic("check", 15) + " Đã mở lại tài khoản</button></div>"
+        : '<div class="pay"><button class="btn pay-btn" data-act="pay" data-id="' + a.id + '">' +
+          ic("check", 15) + " Đánh dấu đã trả · " + vnd(d.weekly) + "</button>" +
+          ((a.log && a.log.length) ? '<button class="icon sm" data-act="undo" data-id="' + a.id +
+            '" title="Hoàn tác lần trả gần nhất">' + ic("undo") + "</button>" : "") + "</div>" +
+          '<div class="due-note">Tuần ' + Math.min(a.paidWeeks + 1, 4) + "/4 đến hạn <b>" + dmy(d.nextDue) +
+          "</b> — " + dueText + "</div>";
+    }
+
+    return '<article class="card v-' + v.k + (off ? " is-off" : "") + (d.cur ? " is-blocked" : "") + '">' +
       '<div class="c-top"><div class="c-id"><h3 class="c-name">' + esc(a.name) + "</h3>" +
       '<div class="c-meta">thuê ' + dmy(a.rentDate) + " · " + num(a.connections) + " kết nối</div></div>" +
       '<span class="badge ' + st[1] + '">' + st[0] + "</span></div>" +
+      barHTML +
       '<div class="perf"></div>' +
       '<div class="cyc"><span class="cyc-l">Chu kỳ trả</span><span class="cyc-v mono">' +
       dm(d.dues[0]) + " → " + dm(d.dues[3]) + "</span></div>" +
       '<div class="punch">' + punch + "</div>" +
-      (off ? "" :
-        '<div class="pay"><button class="btn pay-btn" data-act="pay" data-id="' + a.id + '">' + ic("check", 15) +
-        " Đánh dấu đã trả · " + vnd(d.weekly) + "</button>" +
-        ((a.log && a.log.length) ? '<button class="icon sm" data-act="undo" data-id="' + a.id +
-          '" title="Hoàn tác lần trả gần nhất">' + ic("undo") + "</button>" : "") + "</div>" +
-        '<div class="due-note">Tuần ' + Math.min(a.paidWeeks + 1, 4) + "/4 đến hạn <b>" + dmy(d.nextDue) +
-        "</b> — " + dueText + "</div>") +
+      actionHTML +
       '<div class="perf"></div>' +
-      '<dl class="fin">' +
-      '<div><dt>Thu / tháng</dt><dd class="mono">' + vnd(d.inVND) + '<span class="u">' + usdF(a.monthlyIncomeUSD) + "</span></dd></div>" +
-      '<div><dt>Chi / tháng</dt><dd class="mono">' + vnd(d.outVND) + "</dd></div>" +
-      '<div><dt>Lãi / tháng</dt><dd class="mono ' + (d.profit >= 0 ? "t-green" : "t-red") + '">' + vnd(d.profit) +
-      '<span class="u">' + Math.round(d.margin * 100) + "%</span></dd></div>" +
-      '<div><dt>Nhận tiền tiếp</dt><dd class="mono">' + dmy(d.nextPayout) + '<span class="u">' +
-      usdF(d.perUSD) + " / " + d.cd + " ngày</span></dd></div></dl>" +
+
+      '<div class="mgrid">' +
+      '<div class="m"><div class="m-l">Lãi thực / tháng</div><div class="m-v ' +
+      (d.realProfit >= 0 ? "t-green" : "t-red") + '">' + vnd(d.realProfit) + "</div>" +
+      '<div class="m-s">' + (d.blockCount ? "danh nghĩa " + vndShort(d.profit) : "biên " + Math.round(d.margin * 100) + "%") + "</div></div>" +
+      '<div class="m"><div class="m-l">Uptime ' + d.span + ' ngày</div><div class="m-v ' +
+      (upPct < S.minUptime ? "t-red" : "t-green") + '">' + upPct + "%</div>" +
+      '<div class="m-s">' + (d.blockCount ? d.blockDaysTotal + " ngày chết · " + d.blockCount + " lần" : "chưa lần nào block") + "</div></div>" +
+      '<div class="m"><div class="m-l">Thu / tháng</div><div class="m-v">' + vnd(d.inVND) + "</div>" +
+      '<div class="m-s">' + usdF(a.monthlyIncomeUSD) + "</div></div>" +
+      '<div class="m"><div class="m-l">Chi / tháng</div><div class="m-v">' + vnd(d.outVND) + "</div>" +
+      '<div class="m-s">' + vnd(d.weekly) + " / tuần</div></div></div>" +
+
+      '<div class="mfoot"><span>Nhận tiền tiếp <b>' + dmy(d.nextPayout) + "</b></span><span>" +
+      usdF(d.perUSD) + " / " + d.cd + " ngày</span></div>" +
+
+      '<div class="tl"><div class="tl-bar" style="background:' + timelineBG(a, d) + '"></div>' +
+      '<div class="tl-cap"><span class="vd v-' + v.k + '">' + v.l + " — " + v.r + "</span>" +
+      (d.blockCount ? '<button class="link" data-act="bhist" data-id="' + a.id + '">' + d.blockCount +
+        " lần block</button>" : '<span>' + d.span + " ngày liền không lỗi</span>") + "</div></div>" +
+
       (a.note ? '<p class="note">' + esc(a.note) + "</p>" : "") +
       '<div class="c-act">' +
       '<button class="link" data-act="edit" data-id="' + a.id + '">' + ic("pencil", 12) + " Sửa</button>" +
+      (off || d.cur ? "" : '<button class="link" data-act="blockDlg" data-id="' + a.id + '">' + ic("alert", 12) + " Ghi block</button>") +
       '<button class="link" data-act="toggle" data-id="' + a.id + '">' + ic("power", 12) + " " +
       (off ? "Thuê lại" : "Ngưng thuê") + "</button>" +
       '<button class="link danger" data-act="del" data-id="' + a.id + '">' + ic("trash", 12) + " Xoá</button>" +
       "</div></article>";
+  }
+
+  /* ---- hàng đợi việc hôm nay ---- */
+  function queueHTML(live) {
+    var items = [];
+    live.forEach(function (r) {
+      if (r.d.cur) items.push({ p: 2, r: r, why: r.d.curDays === 0 ? "block từ hôm nay" : "block " + r.d.curDays + " ngày",
+        amt: null, act: "unblockDlg", btn: "Đã mở" });
+      else if (r.d.left < 0) items.push({ p: 0, r: r, why: "quá hạn " + Math.abs(r.d.left) + " ngày",
+        amt: r.d.weekly, act: "pay", btn: "Đã trả" });
+      else if (r.d.left === 0) items.push({ p: 1, r: r, why: "đến hạn hôm nay",
+        amt: r.d.weekly, act: "pay", btn: "Đã trả" });
+    });
+    items.sort(function (x, y) { return x.p - y.p || y.r.d.weekly - x.r.d.weekly; });
+
+    var tmr = live.filter(function (r) { return r.d.dueActive && r.d.left === 1; });
+    var tmrSum = 0;
+    tmr.forEach(function (r) { tmrSum += r.d.weekly; });
+
+    if (!items.length) {
+      var soon = live.filter(function (r) { return r.d.dueActive && r.d.left > 0; })
+        .sort(function (x, y) { return x.d.left - y.d.left; })[0];
+      if (!soon && !tmr.length) return "";
+      return '<div class="queue calm"><div class="q-h"><span class="q-t">Hôm nay không có việc</span>' +
+        '<span class="q-s mono">' + live.length + " acc đang chạy</span></div>" +
+        '<div class="calm-b">Khoản gần nhất: <b>' + esc(soon.a.name) + "</b> ngày <b>" + dmy(soon.d.nextDue) +
+        "</b> — " + vnd(soon.d.weekly) + " (còn " + soon.d.left + " ngày).</div></div>";
+    }
+
+    var sum = 0, rows = "";
+    items.forEach(function (it, i) {
+      if (it.amt) sum += it.amt;
+      rows += '<div class="q-row p-' + it.p + '"><span class="q-n mono">' + (i + 1) + "</span>" +
+        '<span class="q-name">' + esc(it.r.a.name) + "</span>" +
+        '<span class="q-why">' + it.why + "</span>" +
+        '<span class="q-amt">' + (it.amt ? vnd(it.amt) : "—") + "</span>" +
+        '<button class="q-btn" data-act="' + it.act + '" data-id="' + it.r.a.id + '">' + it.btn + "</button></div>";
+    });
+
+    var more = "";
+    if (tmr.length) {
+      more = '<div class="q-more">Ngày mai ' + dm(addDays(todayISO(), 1)) + " — <b>" +
+        tmr.map(function (r) { return esc(r.a.name); }).join(", ") + "</b> · " + vnd(tmrSum) + "</div>";
+    }
+
+    return '<div class="queue"><div class="q-h"><span class="q-t">Việc hôm nay</span>' +
+      '<span class="q-s mono">' + items.length + " việc" + (sum ? " · " + vnd(sum) : "") + "</span></div>" +
+      rows + more + "</div>";
+  }
+
+  /* ---- nhận định toàn danh mục ---- */
+  function insightHTML(rows) {
+    if (rows.length < 2) return "";
+    var pos = rows.filter(function (r) { return r.d.realProfit > 0; })
+      .sort(function (x, y) { return y.d.realProfit - x.d.realProfit; });
+    var totalPos = 0; pos.forEach(function (r) { totalPos += r.d.realProfit; });
+    var acc = 0, k = 0;
+    for (var i = 0; i < pos.length && acc < totalPos * 0.7; i++) { acc += pos[i].d.realProfit; k++; }
+    var loss = rows.filter(function (r) { return r.d.realProfit < 0; }).length;
+    var drop = rows.filter(function (r) { return verdict(r.d).k === "drop"; }).length;
+    var out = [];
+    if (k && pos.length > 1) out.push("<b>" + k + "</b> / " + rows.length + " acc tạo 70% lãi thực");
+    if (loss) out.push('<span class="bad"><b>' + loss + "</b> acc đang lỗ thực tế</span>");
+    if (drop) out.push('<span class="bad"><b>' + drop + "</b> acc nên cân nhắc bỏ</span>");
+    if (!out.length) out.push("Toàn bộ " + rows.length + " acc đều đạt ngưỡng uptime " + S.minUptime + "% và biên " + S.minMargin + "%");
+    return '<div class="insight">' + out.join("<span>·</span>") + "</div>";
   }
 
   function ledgerHTML() {
@@ -571,10 +980,14 @@ svg { flex: none; }
     var rows = S.accounts.map(function (a) { return { a: a, d: derive(a) }; });
     var live = rows.filter(function (r) { return r.a.active !== false; });
 
-    var t = { in: 0, out: 0, conn: 0, week: 0, usd: 0 };
+    var t = { in: 0, out: 0, conn: 0, week: 0, usd: 0, real: 0, blocked: 0, everBlocked: 0 };
     live.forEach(function (r) {
       t.in += r.d.inVND; t.out += r.d.outVND; t.usd += num(r.a.monthlyIncomeUSD);
-      t.conn += num(r.a.connections); if (r.d.left <= 6) t.week += r.d.weekly;
+      t.conn += num(r.a.connections);
+      t.real += r.d.realProfit;
+      if (r.d.cur) t.blocked++;
+      if (r.d.blockCount) t.everBlocked++;
+      if (r.d.dueActive && r.d.left <= 6) t.week += r.d.weekly;
     });
     var profit = t.in - t.out;
     var mth = todayISO().slice(0, 7), paidM = 0;
@@ -585,22 +998,20 @@ svg { flex: none; }
     document.getElementById("rail").innerHTML =
       stat("Thu / tháng", vnd(t.in), usdF(t.usd)) +
       stat("Chi / tháng", vnd(t.out), vnd(t.out / 4) + " / tuần") +
-      stat("Lãi / tháng", vnd(profit), t.in > 0 ? Math.round(profit / t.in * 100) + "% biên" : "—", profit >= 0 ? "green" : "red") +
+      stat(t.everBlocked ? "Lãi thực tế sau block" : "Lãi / tháng",
+        t.everBlocked ? vnd(t.real) : vnd(profit),
+        t.everBlocked ? "danh nghĩa " + vndShort(profit) + " · hụt " + vndShort(profit - t.real)
+          : (t.in > 0 ? Math.round(profit / t.in * 100) + "% biên" : "—"),
+        (t.everBlocked ? t.real : profit) >= 0 ? "green" : "red") +
       stat("Phải trả 7 ngày tới", vnd(t.week), "đã trả tháng này " + vndShort(paidM)) +
-      stat("Đang thuê", String(live.length), t.conn + " kết nối");
+      stat("Đang thuê", String(live.length), t.conn + " kết nối" + (t.blocked ? " · " + t.blocked + " đang block" : ""));
 
-    var od = live.filter(function (r) { return r.d.status === "overdue"; });
-    var td = live.filter(function (r) { return r.d.status === "today"; });
-    var tm = live.filter(function (r) { return r.d.status === "tomorrow"; });
-    var al = "";
-    if (od.length) al += alertBlock("red", "Quá hạn · " + od.length, od);
-    if (td.length) al += alertBlock("red", "Hôm nay " + dm(todayISO()) + " · " + td.length, td);
-    if (tm.length) al += alertBlock("amber", "Ngày mai " + dm(addDays(todayISO(), 1)) + " · " + tm.length, tm);
-    document.getElementById("alerts").innerHTML = al;
+    document.getElementById("alerts").innerHTML = queueHTML(live) + insightHTML(live);
 
     var showAcc = S.tab === "accounts";
     document.getElementById("searchBox").className = showAcc ? "search" : "search hide";
     document.getElementById("filters").className = showAcc ? "filters" : "filters hide";
+    document.getElementById("sortWrap").className = showAcc ? "" : "hide";
     document.getElementById("tabAcc").className = showAcc ? "on" : "";
     document.getElementById("tabLed").className = showAcc ? "" : "on";
 
@@ -610,6 +1021,8 @@ svg { flex: none; }
     var v = rows.filter(function (r) {
       if (S.filter === "due") return ["today", "tomorrow", "soon"].indexOf(r.d.status) >= 0;
       if (S.filter === "overdue") return r.d.status === "overdue";
+      if (S.filter === "block") return !!r.d.cur;
+      if (S.filter === "risk") return verdict(r.d).k === "drop" || verdict(r.d).k === "watch";
       if (S.filter === "off") return r.a.active === false;
       return r.a.active !== false;
     });
@@ -617,7 +1030,17 @@ svg { flex: none; }
     if (q) v = v.filter(function (r) {
       return (r.a.name || "").toLowerCase().indexOf(q) >= 0 || (r.a.note || "").toLowerCase().indexOf(q) >= 0;
     });
-    v.sort(function (x, y) { return x.d.nextDue.localeCompare(y.d.nextDue); });
+
+    var VW = { drop: 0, watch: 1, new: 2, keep: 3 };
+    v.sort(function (x, y) {
+      if (S.sort === "profit") return y.d.realProfit - x.d.realProfit;
+      if (S.sort === "uptime") return x.d.uptime - y.d.uptime;
+      if (S.sort === "risk") return VW[verdict(x.d).k] - VW[verdict(y.d).k] || x.d.uptime - y.d.uptime;
+      if (S.sort === "name") return (x.a.name || "").localeCompare(y.a.name || "");
+      /* urgent: block trước, rồi tới hạn gần nhất */
+      var bx = x.d.cur ? 0 : 1, by = y.d.cur ? 0 : 1;
+      return bx - by || x.d.nextDue.localeCompare(y.d.nextDue);
+    });
 
     if (!v.length) {
       list.className = "";
@@ -632,6 +1055,192 @@ svg { flex: none; }
     list.className = "grid";
     list.innerHTML = v.map(function (r) { return cardHTML(r.a, r.d); }).join("");
   }
+
+  /* ================= ĐỒNG BỘ ĐÁM MÂY =================
+     Gọi thẳng REST API của Supabase bằng fetch, không nạp thư viện.
+     Muốn khỏi nhập lại trên từng máy, điền sẵn 2 dòng dưới đây rồi upload file.
+     Khoá anon được thiết kế để lộ công khai — dữ liệu được bảo vệ bằng RLS. */
+  var SUPABASE_URL = "";
+  var SUPABASE_KEY = "";
+
+  var CKEY = "acct-rental-cloud-v1";
+  var CFG = { url: SUPABASE_URL, key: SUPABASE_KEY, token: "", refresh: "", uid: "", email: "" };
+  var syncSt = "off", syncMsg = "Chưa đồng bộ", pushTimer = null, pulling = false;
+
+  function cfgLoad() {
+    try {
+      var raw = canStore ? localStorage.getItem(CKEY) : null;
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      CFG.url = d.url || SUPABASE_URL; CFG.key = d.key || SUPABASE_KEY;
+      CFG.token = d.token || ""; CFG.refresh = d.refresh || "";
+      CFG.uid = d.uid || ""; CFG.email = d.email || "";
+    } catch (e) {}
+  }
+  function cfgSave() {
+    try { if (canStore) localStorage.setItem(CKEY, JSON.stringify(CFG)); } catch (e) {}
+  }
+  function setSync(st, msg) {
+    syncSt = st; syncMsg = msg;
+    var c = document.getElementById("syncChip"), l = document.getElementById("syncLbl");
+    if (!c) return;
+    c.className = "sync" + (st === "ok" ? " on" : st === "busy" ? " busy" : st === "err" ? " err" : "");
+    l.textContent = msg;
+    c.title = CFG.email ? CFG.email + " — " + msg : msg;
+  }
+  function hhmm() { var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+
+  /* fetch có gắn khoá, tự làm mới token khi hết hạn */
+  function api(path, opts, retried) {
+    opts = opts || {};
+    var h = { "apikey": CFG.key, "Content-Type": "application/json" };
+    if (CFG.token) h["Authorization"] = "Bearer " + CFG.token;
+    for (var k in (opts.headers || {})) h[k] = opts.headers[k];
+    return fetch(CFG.url.replace(/\/+$/, "") + path, {
+      method: opts.method || "GET", headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (r) {
+      if (r.status === 401 && CFG.refresh && !retried) {
+        return refreshToken().then(function () { return api(path, opts, true); });
+      }
+      if (!r.ok) return r.text().then(function (t) {
+        var m = t; try { m = JSON.parse(t).msg || JSON.parse(t).message || JSON.parse(t).error_description || t; } catch (e) {}
+        throw new Error(m || ("Lỗi " + r.status));
+      });
+      return r.status === 204 ? null : r.json().catch(function () { return null; });
+    });
+  }
+
+  function refreshToken() {
+    return fetch(CFG.url.replace(/\/+$/, "") + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST", headers: { apikey: CFG.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: CFG.refresh })
+    }).then(function (r) { if (!r.ok) throw new Error("Phiên đăng nhập đã hết hạn"); return r.json(); })
+      .then(function (d) {
+        CFG.token = d.access_token; CFG.refresh = d.refresh_token; cfgSave();
+      });
+  }
+
+  function auth(mode, email, pass) {
+    var path = mode === "signup" ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password";
+    return fetch(CFG.url.replace(/\/+$/, "") + path, {
+      method: "POST", headers: { apikey: CFG.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) throw new Error(d.msg || d.message || d.error_description || "Không đăng nhập được");
+        return d;
+      });
+    }).then(function (d) {
+      if (!d.access_token) throw new Error("Tài khoản đã tạo nhưng cần xác nhận email. Hãy tắt Confirm email trong Supabase rồi đăng nhập lại.");
+      CFG.token = d.access_token; CFG.refresh = d.refresh_token;
+      CFG.uid = (d.user && d.user.id) || ""; CFG.email = (d.user && d.user.email) || email;
+      cfgSave();
+    });
+  }
+
+  function pull(silent) {
+    if (!CFG.token || !CFG.uid) return Promise.resolve();
+    pulling = true; setSync("busy", "Đang tải…");
+    return api("/rest/v1/ledgers?select=data,updated_at&user_id=eq." + CFG.uid)
+      .then(function (rows) {
+        var row = rows && rows[0];
+        if (!row) { pulling = false; return push(true); }
+        var remote = row.data || {};
+        var rT = remote.updatedAt || row.updated_at || "";
+        var lT = S.updatedAt || "";
+        if (rT > lT) {
+          S.accounts = (remote.accounts || []).map(migrate);
+          S.rate = Number(remote.rate) || S.rate;
+          S.minUptime = Number(remote.minUptime) || S.minUptime;
+          S.minMargin = Number(remote.minMargin) || S.minMargin;
+          S.updatedAt = rT;
+          saveLocal(); render();
+          if (!silent) toast("Đã tải bản mới nhất từ đám mây");
+        } else if (lT > rT) {
+          pulling = false; return push(true);
+        }
+        pulling = false; setSync("ok", "Đồng bộ " + hhmm());
+      })
+      .catch(function (e) { pulling = false; setSync("err", "Lỗi tải"); warn("Đồng bộ: " + e.message); });
+  }
+
+  function push(silent) {
+    if (!CFG.token || !CFG.uid) return Promise.resolve();
+    setSync("busy", "Đang lưu…");
+    var payload = { accounts: S.accounts, rate: S.rate, minUptime: S.minUptime,
+      minMargin: S.minMargin, updatedAt: S.updatedAt, v: 2 };
+    return api("/rest/v1/ledgers?on_conflict=user_id", {
+      method: "POST",
+      headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+      body: { user_id: CFG.uid, data: payload, updated_at: new Date().toISOString() }
+    }).then(function () {
+      setSync("ok", "Đồng bộ " + hhmm()); warn("");
+      if (!silent) toast("Đã đẩy lên đám mây");
+    }).catch(function (e) { setSync("err", "Lỗi lưu"); warn("Đồng bộ: " + e.message); });
+  }
+
+  function schedulePush() {
+    if (!CFG.token || pulling) return;
+    clearTimeout(pushTimer);
+    setSync("busy", "Chờ lưu…");
+    pushTimer = setTimeout(function () { push(true); }, 1500);
+  }
+
+  function signOut() {
+    CFG.token = ""; CFG.refresh = ""; CFG.uid = ""; CFG.email = "";
+    cfgSave(); setSync("off", "Chưa đồng bộ"); closeModal(); render();
+    toast("Đã đăng xuất. Dữ liệu vẫn còn trên máy này.");
+  }
+
+  function cloudSheet() {
+    var linked = !!CFG.token;
+    var cfgOK = CFG.url && CFG.key;
+    var body = "";
+
+    if (linked) {
+      body += '<div class="acct">' + ic("check") + "<span>Đang đăng nhập <b>" + esc(CFG.email) +
+        "</b><br>" + syncMsg + "</span></div>" +
+        '<div class="row2"><button class="btn" data-act="pullNow">' + ic("download") + " Tải từ đám mây</button>" +
+        '<button class="btn" data-act="pushNow">' + ic("upload") + " Đẩy lên đám mây</button></div>" +
+        '<p class="hint">Bình thường app tự đồng bộ sau mỗi thay đổi. Hai nút này chỉ dùng khi muốn ép một chiều.</p>' +
+        '<div class="rule"></div>' +
+        '<button class="btn danger" data-act="signout">' + ic("power") + " Đăng xuất</button>";
+    } else {
+      body += '<div class="sec first">1 · Kết nối dự án</div>' +
+        '<label class="fl" for="cUrl">URL dự án Supabase</label>' +
+        '<input class="in" id="cUrl" value="' + esc(CFG.url) + '" placeholder="https://xxxx.supabase.co" autocapitalize="off" spellcheck="false">' +
+        '<label class="fl" for="cKey">Khoá anon public</label>' +
+        '<input class="in" id="cKey" value="' + esc(CFG.key) + '" placeholder="eyJhbGciOi…" autocapitalize="off" spellcheck="false">' +
+        '<p class="hint">Lấy ở Supabase → Project Settings → API. Nhập một lần trên mỗi thiết bị.</p>' +
+        '<div class="sec">2 · Tài khoản của anh</div>' +
+        '<label class="fl" for="cMail">Email</label>' +
+        '<input class="in" id="cMail" type="email" value="' + esc(CFG.email) + '" autocapitalize="off" spellcheck="false">' +
+        '<label class="fl" for="cPass">Mật khẩu</label>' +
+        '<input class="in" id="cPass" type="password" placeholder="tối thiểu 6 ký tự">' +
+        '<p class="hint">Lần đầu bấm <b>Tạo tài khoản</b>. Trên máy thứ hai bấm <b>Đăng nhập</b> bằng đúng email này.</p>' +
+        (cfgOK ? "" : '<div class="bar">' + ic("alert") + "<span>Chưa có URL và khoá thì không đăng nhập được. Xem hướng dẫn 4 bước ở cuối màn hình Cài đặt.</span></div>");
+    }
+
+    sheet("Đồng bộ đám mây", body,
+      linked ? '<button class="btn" data-act="close">Đóng</button>'
+        : '<button class="btn" data-act="signup">Tạo tài khoản</button>' +
+          '<button class="btn primary" data-act="signin">Đăng nhập</button>');
+  }
+
+  function doAuth(mode) {
+    var g = function (id) { return (document.getElementById(id) || {}).value || ""; };
+    CFG.url = g("cUrl").trim(); CFG.key = g("cKey").trim();
+    var mail = g("cMail").trim(), pass = g("cPass");
+    if (!CFG.url || !CFG.key) { toast("Nhập URL dự án và khoá anon trước"); return; }
+    if (!mail || pass.length < 6) { toast("Email và mật khẩu tối thiểu 6 ký tự"); return; }
+    cfgSave(); setSync("busy", "Đang kết nối…");
+    auth(mode, mail, pass)
+      .then(function () { closeModal(); return pull(); })
+      .then(function () { toast("Đã đăng nhập " + CFG.email); })
+      .catch(function (e) { setSync("err", "Lỗi"); toast(e.message); });
+  }
+
+  /* ================= HẾT PHẦN ĐỒNG BỘ ================= */
 
   /* ---------------- hộp thoại ---------------- */
   function closeModal() { document.getElementById("modal").innerHTML = ""; }
@@ -659,7 +1268,6 @@ svg { flex: none; }
     var f = a || { name: "", rentDate: t, monthlyIncomeUSD: "", payoutCycleDays: 15, perPayoutUSD: "",
       perPayoutManual: false, connections: "", monthlyCostVND: "", anchor: t, note: "", active: true };
     var cd = num(f.payoutCycleDays) || 15;
-    var preset = [10, 15, 30].indexOf(cd) >= 0;
 
     var body =
       '<div class="sec first">Thông tin thuê</div>' +
@@ -765,6 +1373,7 @@ svg { flex: none; }
       anchor: anchor, anchorDay: fromISO(anchor).getDate(),
       note: $("fNote").value, active: true
     };
+    data.blockPolicy = "both";
     if (editId) {
       var a = byId(editId);
       data.active = a.active !== false;
@@ -772,11 +1381,99 @@ svg { flex: none; }
       if ($("fReset") && $("fReset").checked) a.paidWeeks = 0;
       toast("Đã lưu " + name);
     } else {
-      data.id = uid(); data.paidWeeks = 0; data.log = []; data.createdAt = todayISO();
+      data.id = uid(); data.paidWeeks = 0; data.log = []; data.blocks = [];
+      data.payoutShift = 0; data.createdAt = todayISO();
       S.accounts.push(data);
       toast("Đã thêm " + name);
     }
     save(); closeModal(); render();
+  }
+
+  /* ---------------- block ---------------- */
+  function blockDlg(id) {
+    var a = byId(id); if (!a) return;
+    var pol = a.blockPolicy || "both";
+    var effect = pol === "both"
+      ? "Lịch trả tạm dừng ngay. Khi mở lại, mốc thanh toán và ngày nhận tiền cùng dời đúng số ngày chết."
+      : pol === "payout"
+        ? "Vẫn phải trả đủ trong thời gian block. Chỉ ngày nhận tiền được dời khi mở lại."
+        : "Chỉ ghi nhận để thống kê. Không dời mốc nào.";
+    sheet("Ghi block · " + esc(a.name),
+      '<label class="fl" for="bFrom">Ngày bị block</label>' +
+      '<input class="in" id="bFrom" type="date" value="' + todayISO() + '" max="' + todayISO() + '">' +
+      '<p class="hint">Chọn đúng ngày acc ngừng chạy, không phải ngày anh phát hiện ra.</p>' +
+      '<label class="fl" for="bWhy">Lý do</label>' +
+      '<input class="in" id="bWhy" placeholder="VD: đổi IP, xác minh danh tính, vi phạm chính sách…">' +
+      '<p class="hint">Ghi cụ thể — sau vài lần sẽ thấy acc nào block vì cùng một nguyên nhân lặp lại.</p>' +
+      '<div class="bar">' + ic("alert") + "<span><b>Thoả thuận hiện tại:</b> " + POL[pol] + ". " + effect + "</span></div>",
+      '<button class="btn" data-act="close">Huỷ</button>' +
+      '<button class="btn primary" data-act="blockOk" data-id="' + id + '">Ghi nhận block</button>');
+  }
+
+  function unblockDlg(id) {
+    var a = byId(id); if (!a) return;
+    var d = derive(a); if (!d.cur) return;
+    sheet("Mở lại · " + esc(a.name),
+      '<p class="ask">Bị block từ <b>' + dmy(d.cur.from) + "</b>" +
+      (d.cur.reason ? " — " + esc(d.cur.reason) : "") + "</p>" +
+      '<label class="fl" for="uTo">Ngày mở lại</label>' +
+      '<input class="in" id="uTo" type="date" value="' + todayISO() + '" min="' + d.cur.from + '">' +
+      '<div id="uPrev"></div>',
+      '<button class="btn" data-act="close">Huỷ</button>' +
+      '<button class="btn primary" data-act="unblockOk" data-id="' + id + '">Xác nhận mở</button>');
+
+    var pol = a.blockPolicy || "both";
+    function prev() {
+      var to = document.getElementById("uTo").value || todayISO();
+      var days = diffDays(d.cur.from, to);
+      var box = document.getElementById("uPrev");
+      if (days < 0) {
+        box.innerHTML = '<p class="hint bad">Ngày mở phải bằng hoặc sau ngày bị block.</p>';
+        return;
+      }
+      var newAnchor = pol === "both" ? addDays(a.anchor, days) : a.anchor;
+      var newPayout = addDays(a.rentDate, num(a.payoutShift) + (pol === "none" ? 0 : days));
+      var g = 0, cd = num(a.payoutCycleDays) || 15;
+      while (diffDays(todayISO(), newPayout) < 0 && g < 900) { newPayout = addDays(newPayout, cd); g++; }
+      box.innerHTML =
+        '<p class="hint">Số ngày chết: <b>' + days + " ngày</b> · " + POL[pol] + "</p>" +
+        '<div class="brow"><span class="brow-d">Mốc thanh toán</span><span class="brow-x mono">' +
+        (pol === "both" ? dmy(a.anchor) + " → " + dmy(newAnchor) : dmy(a.anchor) + " (giữ nguyên)") + "</span>" +
+        '<span class="brow-n">Ngày nhận tiền tiếp: ' + dmy(newPayout) +
+        (pol === "none" ? " (giữ nguyên)" : "") + "</span></div>" +
+        (days >= 7 ? '<p class="hint bad" style="margin-top:10px">Mất ' + days +
+          " ngày — kiểm tra lại lãi thực tế của acc này trước khi gia hạn thuê.</p>" : "");
+    }
+    document.getElementById("uTo").addEventListener("input", prev);
+    prev();
+  }
+
+  function blockHistory(id) {
+    var a = byId(id); if (!a) return;
+    var d = derive(a), bs = (a.blocks || []).slice().reverse();
+    var body = '<div class="binfo" style="margin:0 0 14px;padding:0;border:0">' +
+      "<span>Tổng <b>" + d.blockCount + "</b> lần · " + d.blockDaysTotal + " ngày · uptime " +
+      Math.round(d.uptime * 100) + "% / " + d.span + " ngày</span></div>";
+    if (!bs.length) {
+      body += '<p class="hint">Chưa có lần block nào được ghi nhận.</p>';
+    } else {
+      body += '<div class="blist">';
+      bs.forEach(function (b) {
+        var days = blockDays(b, todayISO());
+        body += '<div class="brow' + (b.to ? "" : " open") + '">' +
+          '<span class="brow-d">' + dmy(b.from) + (b.to ? " → " + dmy(b.to) : " → đang block") + "</span>" +
+          '<span class="brow-x mono">' + days + " ngày</span>" +
+          (b.reason ? '<span class="brow-n">' + esc(b.reason) + "</span>" : "") +
+          '<span class="brow-a"><span class="brow-s">' +
+          (b.shiftA ? "mốc trả dời " + b.shiftA + " ngày · " : "") +
+          (b.shiftP ? "ngày nhận dời " + b.shiftP + " ngày" : (b.to && !b.shiftA ? "không dời lịch" : "")) +
+          '</span><button class="link danger" data-act="dropBlock" data-id="' + a.id +
+          '" data-b="' + b.id + '">' + ic("trash", 12) + " Xoá</button></span></div>";
+      });
+      body += "</div>";
+    }
+    body += '<p class="hint" style="margin-top:14px">Xoá một lần block sẽ hoàn lại đúng số ngày đã dời lịch.</p>';
+    sheet("Lịch sử block · " + esc(a.name), body, '<button class="btn" data-act="close">Đóng</button>');
   }
 
   /* ---------------- cài đặt ---------------- */
@@ -786,13 +1483,43 @@ svg { flex: none; }
       '<input class="in mono" id="fRate" type="number" inputmode="numeric" value="' + S.rate + '">' +
       '<p class="hint">Áp dụng cho toàn bộ số tiền nhập bằng USD. Sửa lại khi tỷ giá thay đổi.</p>' +
       '<div class="rule"></div>' +
+      '<label class="fl">Ngưỡng đánh giá tài khoản</label>' +
+      '<div class="g2" style="margin-bottom:6px">' +
+      '<div><label class="fl" for="fUp" style="font-weight:400;color:var(--muted)">Uptime tối thiểu (%)</label>' +
+      '<input class="in mono" id="fUp" type="number" inputmode="numeric" value="' + S.minUptime + '"></div>' +
+      '<div><label class="fl" for="fMg" style="font-weight:400;color:var(--muted)">Biên lãi thực tối thiểu (%)</label>' +
+      '<input class="in mono" id="fMg" type="number" inputmode="numeric" value="' + S.minMargin + '"></div></div>' +
+      '<p class="hint">Dưới ngưỡng → <b>Theo dõi</b>. Dưới 85% ngưỡng uptime hoặc nửa ngưỡng biên → <b>Cân nhắc bỏ</b>. ' +
+      'Lãi thực âm → <b>Đang lỗ</b>. Acc thuê chưa đủ 14 ngày chưa bị chấm điểm.</p>' +
+      '<div class="rule"></div>' +
       '<label class="fl">Sao lưu</label>' +
       '<div class="row2"><button class="btn" data-act="export">' + ic("download") + " Xuất file sao lưu</button>" +
       '<button class="btn" data-act="import">' + ic("upload") + " Nạp từ file</button></div>" +
       '<p class="hint">Nạp từ file sẽ thay thế toàn bộ sổ hiện tại. Nên xuất file mỗi tháng một lần và lưu lên Drive.</p>' +
       '<div class="rule"></div>' +
+      '<label class="fl">Đồng bộ nhiều thiết bị</label>' +
+      '<p class="hint">' + (CFG.token
+        ? "Đang đăng nhập <b>" + esc(CFG.email) + "</b> — " + syncMsg + "."
+        : "Chưa bật. Bật lên thì mở app trên điện thoại và máy tính đều thấy cùng một sổ.") + "</p>" +
+      '<button class="btn' + (CFG.token ? "" : " primary") + '" data-act="cloud">' + ic("upload") + " " +
+      (CFG.token ? "Quản lý đồng bộ" : "Bật đồng bộ đám mây") + "</button>" +
+      '<div class="rule"></div>' +
+      '<label class="fl">Cài đặt đám mây lần đầu — 4 bước</label>' +
+      '<p class="hint"><b>1.</b> Vào supabase.com, đăng ký miễn phí, bấm New project. Đặt tên gì cũng được, chọn region Singapore cho gần.</p>' +
+      '<p class="hint"><b>2.</b> Vào SQL Editor, dán đoạn dưới rồi bấm Run:</p>' +
+      '<div class="sqlbox">create table if not exists public.ledgers (\n' +
+      '  user_id uuid primary key references auth.users(id) on delete cascade,\n' +
+      '  data jsonb not null default \'{}\'::jsonb,\n' +
+      '  updated_at timestamptz not null default now()\n);\n\n' +
+      'alter table public.ledgers enable row level security;\n\n' +
+      'create policy "own_select" on public.ledgers\n  for select using (auth.uid() = user_id);\n' +
+      'create policy "own_insert" on public.ledgers\n  for insert with check (auth.uid() = user_id);\n' +
+      'create policy "own_update" on public.ledgers\n  for update using (auth.uid() = user_id)\n  with check (auth.uid() = user_id);</div>' +
+      '<p class="hint"><b>3.</b> Vào Authentication → Sign In / Providers → Email, tắt <b>Confirm email</b> rồi Save. Không tắt thì đăng ký xong không vào được.</p>' +
+      '<p class="hint"><b>4.</b> Vào Project Settings → API, copy <b>Project URL</b> và <b>anon public key</b>, dán vào màn hình Bật đồng bộ ở trên. Trên điện thoại làm y hệt, cùng email và mật khẩu.</p>' +
+      '<div class="rule"></div>' +
       '<button class="btn danger" data-act="wipe">' + ic("rotate") + " Xoá toàn bộ dữ liệu</button>",
-      '<button class="btn" data-act="close">Đóng</button><button class="btn primary" data-act="saveRate">Lưu tỷ giá</button>');
+      '<button class="btn" data-act="close">Đóng</button><button class="btn primary" data-act="saveRate">Lưu cài đặt</button>');
     document.getElementById("fRate").addEventListener("input", function () {
       var v = num(this.value); if (v > 0) { S.rate = v; }
     });
@@ -813,7 +1540,7 @@ svg { flex: none; }
       try {
         var d = JSON.parse(String(r.result));
         if (!Array.isArray(d.accounts)) throw new Error("bad");
-        S.accounts = d.accounts;
+        S.accounts = d.accounts.map(migrate);
         if (d.rate) S.rate = Number(d.rate) || S.rate;
         save(); closeModal(); render(); warn("");
         toast("Đã nạp " + d.accounts.length + " tài khoản từ file");
@@ -835,6 +1562,19 @@ svg { flex: none; }
     else if (act === "pay") payNext(id);
     else if (act === "undo") undoLast(id);
     else if (act === "toggle") { var a = byId(id); a.active = a.active === false; save(); render(); }
+    else if (act === "blockDlg") blockDlg(id);
+    else if (act === "unblockDlg") unblockDlg(id);
+    else if (act === "bhist") blockHistory(id);
+    else if (act === "blockOk") {
+      var bf = document.getElementById("bFrom").value || todayISO();
+      if (bf > todayISO()) { toast("Không ghi block cho ngày trong tương lai"); return; }
+      addBlock(id, bf, document.getElementById("bWhy").value.trim());
+    }
+    else if (act === "unblockOk") {
+      var ut = document.getElementById("uTo").value || todayISO();
+      unblock(id, ut);
+    }
+    else if (act === "dropBlock") dropBlock(id, b.getAttribute("data-b"));
     else if (act === "del") {
       var acc = byId(id);
       sheet("Xoá tài khoản",
@@ -848,7 +1588,19 @@ svg { flex: none; }
       save(); closeModal(); render(); toast("Đã xoá tài khoản khỏi sổ");
     }
     else if (act === "settings") openSettings();
-    else if (act === "saveRate") { save(); closeModal(); render(); toast("Đã lưu tỷ giá " + NF.format(S.rate)); }
+    else if (act === "cloud") cloudSheet();
+    else if (act === "signin") doAuth("password");
+    else if (act === "signup") doAuth("signup");
+    else if (act === "signout") signOut();
+    else if (act === "pullNow") { closeModal(); S.updatedAt = ""; pull(); }
+    else if (act === "pushNow") { closeModal(); S.updatedAt = new Date().toISOString(); saveLocal(); push(); }
+    else if (act === "saveRate") {
+      var up = num(document.getElementById("fUp").value), mg = num(document.getElementById("fMg").value);
+      if (up > 0 && up <= 100) S.minUptime = up;
+      if (mg > 0 && mg <= 100) S.minMargin = mg;
+      save(); closeModal(); render();
+      toast("Đã lưu · tỷ giá " + NF.format(S.rate) + " · ngưỡng " + S.minUptime + "% / " + S.minMargin + "%");
+    }
     else if (act === "export") exportJSON();
     else if (act === "import") document.getElementById("fileIn").click();
     else if (act === "wipe") {
@@ -875,19 +1627,27 @@ svg { flex: none; }
     var q = document.getElementById("q"); q.value = ""; S.q = "";
     this.className = "clr hide"; render(); q.focus();
   });
+  document.getElementById("sortSel").addEventListener("change", function () {
+    S.sort = this.value; render();
+  });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
 
   /* mở lại sau khi máy ngủ / đổi ngày -> cập nhật lại trạng thái đến hạn */
   var lastDay = todayISO();
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden && todayISO() !== lastDay) { lastDay = todayISO(); render(); }
+    if (document.hidden) return;
+    if (todayISO() !== lastDay) { lastDay = todayISO(); render(); }
+    if (CFG.token) pull(true);
   });
 
   /* ---------------- khởi động ---------------- */
   paintIcons(document);
   load();
+  cfgLoad();
   if (!canStore) warn("Trình duyệt đang chặn lưu trữ (chế độ ẩn danh?). Dữ liệu sẽ mất khi đóng tab.");
   render();
+  setSync(CFG.token ? "busy" : "off", CFG.token ? "Đang tải…" : "Chưa đồng bộ");
+  if (CFG.token) pull(true);
 })();
 </script>
 </body>
