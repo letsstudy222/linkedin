@@ -412,6 +412,24 @@ svg { flex: none; }
 .bar { border-color: #DFDDF6; }
 .note { border-left-color: var(--carbon-s); border-left-width: 3px; background: var(--panel2); }
 
+/* ---- khối chu kỳ nhận ---- */
+.punch.recv .cell.next { border-color: var(--green); background: var(--green-s);
+  box-shadow: inset 0 0 0 1px var(--green); }
+.punch.recv .cell.next .cell-w, .punch.recv .cell.next .cell-d { color: var(--green); }
+.punch.recv .cell.late { border-color: var(--amber); background: var(--amber-s);
+  box-shadow: inset 0 0 0 1px var(--amber); }
+.punch.recv .cell.late .cell-w, .punch.recv .cell.late .cell-d { color: var(--amber); }
+.punch.recv .stamp { color: var(--green); border-color: var(--green); }
+.recv-btn { flex: 1; justify-content: center; background: var(--green); color: #fff;
+  border-color: var(--green); box-shadow: 0 2px 8px rgba(78,147,124,.25); }
+.recv-btn:hover { background: #45836F; }
+.q-row.p-1 .q-n, .q-row.p-3 .q-n { background: var(--amber); color: #fff; }
+.q-row.p-3 .q-why { color: var(--green); }
+.q-row.p-1 .q-why { color: var(--amber); font-weight: 600; }
+.q-row.p-4 .q-n { background: var(--carbon); color: #fff; }
+.lt-in { color: var(--green); }
+.lt-out { color: var(--ink2); }
+
 /* ---- chip đồng bộ ---- */
 .sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border-radius: 999px;
   padding: 5px 11px; border: 1px solid var(--rule); background: var(--panel2); color: var(--muted); }
@@ -460,7 +478,7 @@ svg { flex: none; }
   <div class="tools">
     <div class="seg">
       <button id="tabAcc" class="on" data-act="tab" data-v="accounts">Tài khoản</button>
-      <button id="tabLed" data-act="tab" data-v="ledger"><span data-ic="history"></span> Sổ chi</button>
+      <button id="tabLed" data-act="tab" data-v="ledger"><span data-ic="history"></span> Sổ thu chi</button>
     </div>
     <div class="search" id="searchBox">
       <span data-ic="search"></span>
@@ -610,6 +628,19 @@ svg { flex: none; }
   function migrate(a) {
     if (!Array.isArray(a.blocks)) a.blocks = [];
     if (typeof a.payoutShift !== "number") a.payoutShift = 0;
+    if (!Array.isArray(a.recvLog)) a.recvLog = [];
+    if (typeof a.gotCount !== "number") a.gotCount = 0;
+    if (!a.payAnchor) {
+      /* sổ cũ tính ngày nhận từ ngày thuê + số ngày đã dời -> quy về mốc chu kỳ */
+      var base = addDays(a.rentDate || todayISO(), num(a.payoutShift));
+      var cdm = num(a.payoutCycleDays) || 15;
+      var perm = Math.max(1, Math.round(30 / cdm)), g = 0;
+      while (diffDays(todayISO(), addDays(base, (perm - 1) * cdm)) < 0 && g < 400) {
+        base = addMonthsClamp(base, 1, fromISO(base).getDate()); g++;
+      }
+      a.payAnchor = base;
+    }
+    if (!a.payAnchorDay) a.payAnchorDay = fromISO(a.payAnchor).getDate();
     if (!a.blockPolicy) a.blockPolicy = "both";
     if (!Array.isArray(a.log)) a.log = [];
     if (typeof a.paidWeeks !== "number") a.paidWeeks = 0;
@@ -663,8 +694,13 @@ svg { flex: none; }
     var margin = inVND > 0 ? profit / inVND : 0;
     var cd = num(a.payoutCycleDays) || 15;
     var perUSD = a.perPayoutManual ? num(a.perPayoutUSD) : num(a.monthlyIncomeUSD) * cd / 30;
-    var np = addDays(a.rentDate || today, num(a.payoutShift)), g = 0;
-    while (diffDays(today, np) < 0 && g < 900) { np = addDays(np, cd); g++; }
+    /* chu kỳ nhận: per lần mỗi chu kỳ, nhận đủ thì mốc nhảy sang tháng sau */
+    var per = Math.max(1, Math.round(30 / cd));
+    var gc = Math.min(Math.max(0, num(a.gotCount)), per - 1);
+    var payDues = [];
+    for (var j = 0; j < per; j++) payDues.push(addDays(a.payAnchor, j * cd));
+    var np = payDues[gc];
+    var pLeft = diffDays(today, np);
 
     /* ---- block ---- */
     var pol = a.blockPolicy || "both";
@@ -706,6 +742,7 @@ svg { flex: none; }
 
     return { dues: dues, nextDue: nextDue, left: left, weekly: weekly, inVND: inVND, outVND: outVND,
       profit: profit, margin: margin, perUSD: perUSD, nextPayout: np, status: st, cd: cd,
+      per: per, gc: gc, payDues: payDues, pLeft: pLeft, recvActive: !cur,
       pol: pol, cur: cur, curDays: curDays, blockCount: blocks.length, blockDaysTotal: totalDays,
       uptime: uptime, span: span, realProfit: realProfit, dueActive: dueActive };
   }
@@ -718,8 +755,38 @@ svg { flex: none; }
 
   var POL = { both: "Dừng cả hai — không nhận tiền, không phải trả" };
 
-  /* ---- ghi block / mở block ---- */
-  function addBlock(id, from, reason) {
+  /* ---- nhận tiền: đối xứng với thanh toán ---- */
+  function gotNext(id) {
+    var a = byId(id); if (!a) return;
+    var d = derive(a);
+    if (!d.recvActive) { toast("Đang bị block — chu kỳ nhận đang tạm dừng"); return; }
+    var seq = d.gc + 1;
+    a.recvLog = a.recvLog || [];
+    a.recvLog.push({ id: uid(), seq: seq, dueOn: d.payDues[d.gc], gotOn: todayISO(),
+      amountUSD: Math.round(d.perUSD * 100) / 100, amountVND: Math.round(d.perUSD * S.rate),
+      cycleAnchor: a.payAnchor, name: a.name });
+    if (seq >= d.per) {
+      a.payAnchor = addMonthsClamp(a.payAnchor, 1, a.payAnchorDay);
+      a.gotCount = 0;
+      toast(a.name + ": nhận đủ " + d.per + "/" + d.per + " lần. Chu kỳ mới từ " + dmy(a.payAnchor));
+    } else {
+      a.gotCount = seq;
+      toast(a.name + ": đã nhận lần " + seq + "/" + d.per);
+    }
+    save(); render();
+  }
+
+  function undoGot(id) {
+    var a = byId(id); if (!a || !a.recvLog || !a.recvLog.length) return;
+    var last = a.recvLog.pop();
+    var per = Math.max(1, Math.round(30 / (num(a.payoutCycleDays) || 15)));
+    if (last.seq >= per) { a.gotCount = per - 1; a.payAnchor = last.cycleAnchor;
+      a.payAnchorDay = fromISO(a.payAnchor).getDate(); }
+    else { a.gotCount = Math.max(0, num(a.gotCount) - 1); }
+    save(); render(); toast("Đã hoàn tác lần nhận gần nhất");
+  }
+
+  /* ---- ghi block / mở block ---- */  function addBlock(id, from, reason) {
     var a = byId(id); if (!a) return;
     a.blocks = a.blocks || [];
     for (var i = 0; i < a.blocks.length; i++) if (!a.blocks[i].to) return;
@@ -743,10 +810,9 @@ svg { flex: none; }
         a.anchorDay = fromISO(a.anchor).getDate();
         cur.shiftA = days;
       }
-      if (pol === "both" || pol === "payout") {
-        a.payoutShift = num(a.payoutShift) + days;
-        cur.shiftP = days;
-      }
+      a.payAnchor = addDays(a.payAnchor, days);
+      a.payAnchorDay = fromISO(a.payAnchor).getDate();
+      cur.shiftP = days;
     }
     save(); closeModal(); render();
     toast(a.name + ": mở lại sau " + days + " ngày" + (cur.shiftA ? " · mốc trả dời sang " + dmy(a.anchor) : ""));
@@ -759,7 +825,10 @@ svg { flex: none; }
     a.blocks.forEach(function (b) {
       if (b.id === bId) {
         if (b.shiftA) { a.anchor = addDays(a.anchor, -b.shiftA); a.anchorDay = fromISO(a.anchor).getDate(); }
-        if (b.shiftP) a.payoutShift = num(a.payoutShift) - b.shiftP;
+        if (b.shiftP) {
+          a.payAnchor = addDays(a.payAnchor, -b.shiftP);
+          a.payAnchorDay = fromISO(a.payAnchor).getDate();
+        }
       } else keep.push(b);
     });
     a.blocks = keep;
@@ -838,6 +907,36 @@ svg { flex: none; }
           "</b> — " + dueText + "</div>";
     }
 
+    /* ---- khối chu kỳ nhận, đối xứng với chu kỳ trả ---- */
+    var rPunch = "";
+    for (var j = 0; j < d.per; j++) {
+      var gotIt = j < d.gc, rNext = j === d.gc, rLate = rNext && d.pLeft < 0 && d.recvActive;
+      rPunch += '<div class="cell' + (gotIt ? " paid" : "") + (rNext ? " next" : "") + (rLate ? " late" : "") + '">' +
+        '<span class="cell-w">L' + (j + 1) + '</span><span class="cell-d mono">' + dm(d.payDues[j]) + "</span>" +
+        (gotIt ? '<span class="stamp">ĐÃ NHẬN</span>' : "") + "</div>";
+    }
+    var rNote = !d.recvActive ? "Đang block — chu kỳ nhận tạm dừng"
+      : d.pLeft < 0 ? "Lần " + (d.gc + 1) + "/" + d.per + " dự kiến <b>" + dmy(d.nextPayout) + "</b> — <b>trễ " + Math.abs(d.pLeft) + " ngày</b>"
+      : "Lần " + (d.gc + 1) + "/" + d.per + " dự kiến <b>" + dmy(d.nextPayout) + "</b> — " +
+        (d.pLeft === 0 ? "hôm nay" : d.pLeft === 1 ? "ngày mai" : "còn " + d.pLeft + " ngày");
+
+    var recvHTML = off ? "" :
+      '<div class="perf"></div>' +
+      '<div class="cyc"><span class="cyc-l">Chu kỳ nhận · ' + d.cd + ' ngày</span><span class="cyc-v mono">' +
+      dm(d.payDues[0]) + " → " + dm(d.payDues[d.per - 1]) + "</span></div>" +
+      '<div class="punch recv" style="grid-template-columns:repeat(' + d.per + ',1fr)">' + rPunch + "</div>" +
+      (d.recvActive
+        ? '<div class="pay"><button class="btn recv-btn" data-act="got" data-id="' + a.id + '">' +
+          ic("download", 15) + " Đánh dấu đã nhận · " + usdF(d.perUSD) + "</button>" +
+          ((a.recvLog && a.recvLog.length) ? '<button class="icon sm" data-act="undoGot" data-id="' + a.id +
+            '" title="Hoàn tác lần nhận gần nhất">' + ic("undo") + "</button>" : "") + "</div>"
+        : "") +
+      '<div class="due-note">' + rNote + "</div>";
+
+    /* đã nhận trong tháng dương lịch này */
+    var mk = todayISO().slice(0, 7), gotM = 0;
+    (a.recvLog || []).forEach(function (e) { if (e.gotOn.indexOf(mk) === 0) gotM += num(e.amountUSD); });
+
     return '<article class="card v-' + v.k + (off ? " is-off" : "") + (d.cur ? " is-blocked" : "") + '">' +
       '<div class="c-top"><div class="c-id"><h3 class="c-name">' + esc(a.name) + "</h3>" +
       '<div class="c-meta">thuê ' + dmy(a.rentDate) + " · " + num(a.connections) + " kết nối</div></div>" +
@@ -848,6 +947,7 @@ svg { flex: none; }
       dm(d.dues[0]) + " → " + dm(d.dues[3]) + "</span></div>" +
       '<div class="punch">' + punch + "</div>" +
       actionHTML +
+      recvHTML +
       '<div class="perf"></div>' +
 
       '<div class="mgrid">' +
@@ -862,8 +962,8 @@ svg { flex: none; }
       '<div class="m"><div class="m-l">Chi / tháng</div><div class="m-v">' + vnd(d.outVND) + "</div>" +
       '<div class="m-s">' + vnd(d.weekly) + " / tuần</div></div></div>" +
 
-      '<div class="mfoot"><span>Nhận tiền tiếp <b>' + dmy(d.nextPayout) + "</b></span><span>" +
-      usdF(d.perUSD) + " / " + d.cd + " ngày</span></div>" +
+      '<div class="mfoot"><span>Đã nhận tháng này <b>' + usdF(gotM) + "</b> / " + usdF(a.monthlyIncomeUSD) +
+      "</span><span>" + usdF(d.perUSD) + " × " + d.per + " lần</span></div>" +
 
       '<div class="tl"><div class="tl-bar" style="background:' + timelineBG(a, d) + '"></div>' +
       '<div class="tl-cap"><span class="vd v-' + v.k + '">' + v.l + " — " + v.r + "</span>" +
@@ -884,12 +984,19 @@ svg { flex: none; }
   function queueHTML(live) {
     var items = [];
     live.forEach(function (r) {
-      if (r.d.cur) items.push({ p: 2, r: r, why: r.d.curDays === 0 ? "block từ hôm nay" : "block " + r.d.curDays + " ngày",
-        amt: null, act: "unblockDlg", btn: "Đã mở" });
-      else if (r.d.left < 0) items.push({ p: 0, r: r, why: "quá hạn " + Math.abs(r.d.left) + " ngày",
+      if (r.d.cur) {
+        items.push({ p: 4, r: r, why: r.d.curDays === 0 ? "block từ hôm nay" : "block " + r.d.curDays + " ngày",
+          amt: null, act: "unblockDlg", btn: "Đã mở" });
+        return;
+      }
+      if (r.d.left < 0) items.push({ p: 0, r: r, why: "trả trễ " + Math.abs(r.d.left) + " ngày",
         amt: r.d.weekly, act: "pay", btn: "Đã trả" });
-      else if (r.d.left === 0) items.push({ p: 1, r: r, why: "đến hạn hôm nay",
+      else if (r.d.left === 0) items.push({ p: 2, r: r, why: "đến hạn trả hôm nay",
         amt: r.d.weekly, act: "pay", btn: "Đã trả" });
+      if (r.d.pLeft < 0) items.push({ p: 1, r: r, why: "tiền về trễ " + Math.abs(r.d.pLeft) + " ngày",
+        amt: null, act: "got", btn: "Đã nhận" });
+      else if (r.d.pLeft === 0) items.push({ p: 3, r: r, why: "dự kiến nhận hôm nay",
+        amt: null, act: "got", btn: "Đã nhận" });
     });
     items.sort(function (x, y) { return x.p - y.p || y.r.d.weekly - x.r.d.weekly; });
 
@@ -924,7 +1031,7 @@ svg { flex: none; }
     }
 
     return '<div class="queue"><div class="q-h"><span class="q-t">Việc hôm nay</span>' +
-      '<span class="q-s mono">' + items.length + " việc" + (sum ? " · " + vnd(sum) : "") + "</span></div>" +
+      '<span class="q-s mono">' + items.length + " việc" + (sum ? " · chi " + vnd(sum) : "") + "</span></div>" +
       rows + more + "</div>";
   }
 
@@ -948,27 +1055,38 @@ svg { flex: none; }
 
   function ledgerHTML() {
     var all = [];
-    S.accounts.forEach(function (a) { (a.log || []).forEach(function (e) { all.push(e); }); });
+    S.accounts.forEach(function (a) {
+      (a.log || []).forEach(function (e) {
+        all.push({ t: "out", d: e.paidOn, name: e.name || a.name, vnd: num(e.amountVND),
+          lbl: "trả tuần " + e.week + "/4 · hạn " + dm(e.dueOn), id: e.id });
+      });
+      (a.recvLog || []).forEach(function (e) {
+        all.push({ t: "in", d: e.gotOn, name: e.name || a.name, vnd: num(e.amountVND),
+          usd: num(e.amountUSD), lbl: "nhận lần " + e.seq + " · dự kiến " + dm(e.dueOn), id: e.id });
+      });
+    });
     if (!all.length) {
-      return '<div class="empty">' + ic("history", 22) + "<h3>Sổ chi chưa có dòng nào</h3>" +
-        "<p>Mỗi lần bấm “Đánh dấu đã trả”, khoản chi sẽ được ghi vào đây kèm ngày và số tiền.</p></div>";
+      return '<div class="empty">' + ic("history", 22) + "<h3>Sổ chưa có dòng nào</h3>" +
+        "<p>Mỗi lần bấm “Đã trả” hoặc “Đã nhận”, khoản đó sẽ được ghi vào đây kèm ngày và số tiền.</p></div>";
     }
-    all.sort(function (x, y) { return (y.paidOn + y.id).localeCompare(x.paidOn + x.id); });
+    all.sort(function (x, y) { return (y.d + y.id).localeCompare(x.d + x.id); });
     var m = {}, keys = [];
-    all.forEach(function (e) { var k = e.paidOn.slice(0, 7); if (!m[k]) { m[k] = []; keys.push(k); } m[k].push(e); });
+    all.forEach(function (e) { var k = e.d.slice(0, 7); if (!m[k]) { m[k] = []; keys.push(k); } m[k].push(e); });
     keys.sort(function (a, b) { return b.localeCompare(a); });
     var out = '<div class="ledger">';
     keys.forEach(function (k) {
-      var list = m[k], sum = 0, rows = "";
+      var list = m[k], sIn = 0, sOut = 0, rows = "";
       list.forEach(function (e) {
-        sum += num(e.amountVND);
-        rows += '<tr><td class="mono lt-d">' + dmy(e.paidOn) + '</td><td class="lt-n">' + esc(e.name) +
-          '</td><td class="lt-w">tuần ' + e.week + "/4 · hạn " + dm(e.dueOn) + '</td><td class="mono lt-a">' +
-          vnd(e.amountVND) + "</td></tr>";
+        if (e.t === "in") sIn += e.vnd; else sOut += e.vnd;
+        rows += '<tr><td class="mono lt-d">' + dmy(e.d) + '</td><td class="lt-n">' + esc(e.name) +
+          '</td><td class="lt-w">' + e.lbl + '</td><td class="mono lt-a ' +
+          (e.t === "in" ? "lt-in" : "lt-out") + '">' + (e.t === "in" ? "+" : "−") + vnd(e.vnd) +
+          (e.usd ? ' <span class="u">' + usdF(e.usd) + "</span>" : "") + "</td></tr>";
       });
       var p = k.split("-");
       out += '<div class="lmonth"><div class="lmonth-h"><span>Tháng ' + p[1] + "/" + p[0] +
-        '</span><span class="mono">' + vnd(sum) + " · " + list.length + " lần</span></div>" +
+        '</span><span class="mono">thu ' + vndShort(sIn) + " · chi " + vndShort(sOut) +
+        " · lãi " + vndShort(sIn - sOut) + "</span></div>" +
         '<table class="ltab"><tbody>' + rows + "</tbody></table></div>";
     });
     return out + "</div>";
@@ -1270,7 +1388,8 @@ svg { flex: none; }
     editId = a ? a.id : null;
     var t = todayISO();
     var f = a || { name: "", rentDate: t, monthlyIncomeUSD: "", payoutCycleDays: 15, perPayoutUSD: "",
-      perPayoutManual: false, connections: "", monthlyCostVND: "", anchor: t, note: "", active: true };
+      perPayoutManual: false, connections: "", monthlyCostVND: "", anchor: t, payAnchor: t,
+      note: "", active: true };
     var cd = num(f.payoutCycleDays) || 15;
 
     var body =
@@ -1298,6 +1417,10 @@ svg { flex: none; }
       '<input class="in mono" id="fPer" type="number" inputmode="decimal" value="' +
       (f.perPayoutManual ? esc(f.perPayoutUSD) : "") + '" placeholder="0">' +
       '<p class="hint" id="hPer"></p>' +
+
+      '<label class="fl" for="fPAnchor">Ngày nhận lần 1 (mốc chu kỳ nhận)</label>' +
+      '<input class="in" id="fPAnchor" type="date" value="' + esc(f.payAnchor || f.rentDate || t) + '">' +
+      '<p class="hint" id="hPAnchor"></p>' +
 
       '<div class="sec">Tiền phải trả</div>' +
       '<label class="fl" for="fCost">Số tiền phải thanh toán / tháng (VND)</label>' +
@@ -1335,6 +1458,11 @@ svg { flex: none; }
       $("hPer").innerHTML = "= " + vnd(per * S.rate) + " · " + (Math.round(30 / cdv * 10) / 10) + " lần / tháng" +
         (manual ? ' <button class="link inline" id="reAuto">Tính lại tự động</button>' : "");
       $("hCost").innerHTML = "Chia 4 tuần: <b>" + vnd(cost / 4) + "</b> mỗi lần trả";
+      var pa = $("fPAnchor").value || todayISO();
+      var perF = Math.max(1, Math.round(30 / cdv)), pd = [];
+      for (var z = 0; z < perF; z++) pd.push(addDays(pa, z * cdv));
+      $("hPAnchor").innerHTML = "Nhận <b>" + perF + " lần</b> mỗi chu kỳ: " + pd.map(dm).join(" · ") +
+        " → nhận đủ thì mốc chuyển sang <b>" + dmy(addMonthsClamp(pa, 1, fromISO(pa).getDate())) + "</b>";
       $("hAnchor").innerHTML = "Các mốc: " + weekDues(anchor).map(dm).join(" · ") +
         " → trả xong 4 tuần, mốc tự chuyển sang <b>" + dmy(addMonthsClamp(anchor, 1, fromISO(anchor).getDate())) + "</b>";
       $("autoTag").className = manual ? "tag hide" : "tag";
@@ -1344,7 +1472,7 @@ svg { flex: none; }
       if (ra) ra.onclick = function () { manual = false; $("fPer").value = ""; refresh(); };
     }
 
-    ["fInc", "fCd", "fCost", "fAnchor"].forEach(function (id) { $(id).addEventListener("input", refresh); });
+    ["fInc", "fCd", "fCost", "fAnchor", "fPAnchor"].forEach(function (id) { $(id).addEventListener("input", refresh); });
     $("fPer").addEventListener("input", function () { manual = true; refresh(); });
     $("cdChips").addEventListener("click", function (e) {
       var b = e.target.closest("[data-cd]"); if (!b) return;
@@ -1375,6 +1503,8 @@ svg { flex: none; }
       perPayoutUSD: num($("fPer").value), perPayoutManual: Math.abs(num($("fPer").value) - inc * cd / 30) > 0.01,
       connections: num($("fConn").value), monthlyCostVND: num($("fCost").value),
       anchor: anchor, anchorDay: fromISO(anchor).getDate(),
+      payAnchor: $("fPAnchor").value || todayISO(),
+      payAnchorDay: fromISO($("fPAnchor").value || todayISO()).getDate(),
       note: $("fNote").value, active: true
     };
     data.blockPolicy = "both";
@@ -1386,6 +1516,7 @@ svg { flex: none; }
       toast("Đã lưu " + name);
     } else {
       data.id = uid(); data.paidWeeks = 0; data.log = []; data.blocks = [];
+      data.gotCount = 0; data.recvLog = [];
       data.payoutShift = 0; data.createdAt = todayISO();
       S.accounts.push(data);
       toast("Đã thêm " + name);
@@ -1435,16 +1566,13 @@ svg { flex: none; }
         box.innerHTML = '<p class="hint bad">Ngày mở phải bằng hoặc sau ngày bị block.</p>';
         return;
       }
-      var newAnchor = pol === "both" ? addDays(a.anchor, days) : a.anchor;
-      var newPayout = addDays(a.rentDate, num(a.payoutShift) + (pol === "none" ? 0 : days));
-      var g = 0, cd = num(a.payoutCycleDays) || 15;
-      while (diffDays(todayISO(), newPayout) < 0 && g < 900) { newPayout = addDays(newPayout, cd); g++; }
+      var newAnchor = addDays(a.anchor, days);
+      var newPayout = addDays(d.payDues[d.gc], days);
       box.innerHTML =
-        '<p class="hint">Số ngày chết: <b>' + days + " ngày</b> · " + POL[pol] + "</p>" +
+        '<p class="hint">Số ngày chết: <b>' + days + " ngày</b> · cả hai chiều cùng dời</p>" +
         '<div class="brow"><span class="brow-d">Mốc thanh toán</span><span class="brow-x mono">' +
-        (pol === "both" ? dmy(a.anchor) + " → " + dmy(newAnchor) : dmy(a.anchor) + " (giữ nguyên)") + "</span>" +
-        '<span class="brow-n">Ngày nhận tiền tiếp: ' + dmy(newPayout) +
-        (pol === "none" ? " (giữ nguyên)" : "") + "</span></div>" +
+        dmy(a.anchor) + " → " + dmy(newAnchor) + "</span>" +
+        '<span class="brow-n">Ngày nhận tiền: ' + dmy(d.payDues[d.gc]) + " → " + dmy(newPayout) + "</span></div>" +
         (days >= 7 ? '<p class="hint bad" style="margin-top:10px">Mất ' + days +
           " ngày — kiểm tra lại lãi thực tế của acc này trước khi gia hạn thuê.</p>" : "");
     }
@@ -1565,6 +1693,8 @@ svg { flex: none; }
     else if (act === "edit") openForm(byId(id));
     else if (act === "pay") payNext(id);
     else if (act === "undo") undoLast(id);
+    else if (act === "got") gotNext(id);
+    else if (act === "undoGot") undoGot(id);
     else if (act === "toggle") { var a = byId(id); a.active = a.active === false; save(); render(); }
     else if (act === "blockDlg") blockDlg(id);
     else if (act === "unblockDlg") unblockDlg(id);
