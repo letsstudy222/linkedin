@@ -449,6 +449,40 @@ svg { flex: none; }
 .au-w { color: var(--muted); font-size: 11.5px; font-weight: 400; }
 .seg button { padding: 5px 10px; font-size: 12.5px; }
 
+/* ---- biểu đồ ---- */
+.charts { display: flex; flex-direction: column; gap: 12px; }
+.ch { background: var(--panel); border: 1px solid var(--rule2); border-radius: 16px;
+  box-shadow: var(--shadow); overflow: hidden; }
+.ch-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  padding: 11px 15px; background: var(--panel2); border-bottom: 1px solid var(--rule2);
+  font-family: var(--cond); font-weight: 700; font-size: 12.5px; letter-spacing: .11em; text-transform: uppercase; }
+.ch-h span:last-child { letter-spacing: 0; text-transform: none; color: var(--ink2); font-family: var(--mono); font-size: 11.5px; }
+.ch-b { padding: 13px 15px 4px; }
+.cf { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.cf-m { flex: none; width: 46px; font-size: 11.5px; color: var(--muted); }
+.cf-m.life-n { width: 118px; font-family: inherit; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; color: var(--ink2); font-size: 12px; }
+.cf-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cf-b { height: 9px; border-radius: 999px; min-width: 2px; transition: width .3s ease; }
+.cf-b.cin { background: var(--green); }
+.cf-b.cout { background: var(--carbon); }
+.cf-n { flex: none; width: 62px; text-align: right; font-size: 11.5px; color: var(--ink2); }
+.up-track { flex: 1; height: 9px; border-radius: 999px; background: var(--rule2); overflow: hidden; min-width: 0; }
+.up-track i { display: block; height: 100%; border-radius: 999px; transition: width .3s ease; }
+.map-bar { flex: 1; height: 9px; border-radius: 999px; min-width: 0; }
+.ch-lg { display: flex; gap: 16px; padding: 4px 0 2px; font-size: 11.5px; color: var(--muted); }
+.sw { display: inline-block; width: 9px; height: 9px; border-radius: 999px; margin-right: 5px; vertical-align: -1px; }
+.sw.cin, .sw.cgrn { background: var(--green); }
+.sw.cout { background: var(--carbon); }
+.sw.cred { background: var(--red); }
+.ch-note { font-size: 11.5px; color: var(--muted); margin: 8px 0 12px; line-height: 1.55; }
+.ch-note b { color: var(--ink2); }
+@media (max-width: 640px) {
+  .cf-m.life-n { width: 86px; font-size: 11px; }
+  .cf-n { width: 52px; font-size: 11px; }
+  .ch-b { padding: 12px 12px 4px; }
+}
+
 /* ---- chip đồng bộ ---- */
 .sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border-radius: 999px;
   padding: 5px 11px; border: 1px solid var(--rule); background: var(--panel2); color: var(--muted); }
@@ -497,8 +531,9 @@ svg { flex: none; }
   <div class="tools">
     <div class="seg">
       <button id="tabAcc" class="on" data-act="tab" data-v="accounts">Tài khoản</button>
-      <button id="tabLed" data-act="tab" data-v="ledger">Sổ thu chi</button>
-      <button id="tabLog" data-act="tab" data-v="audit"><span data-ic="history"></span> Nhật ký</button>
+      <button id="tabLed" data-act="tab" data-v="ledger">Sổ</button>
+      <button id="tabCh" data-act="tab" data-v="chart">Biểu đồ</button>
+      <button id="tabLog" data-act="tab" data-v="audit">Nhật ký</button>
     </div>
     <div class="search" id="searchBox">
       <span data-ic="search"></span>
@@ -613,8 +648,7 @@ svg { flex: none; }
   /* nhật ký hành động: ai làm gì, lúc nào — đồng bộ cùng dữ liệu */
   function audit(act, name, detail) {
     if (!Array.isArray(S.audit)) S.audit = [];
-    S.audit.push({ ts: new Date().toISOString(), who: (CFG && CFG.who) || "", act: act,
-      name: name || "", detail: detail || "" });
+    S.audit.push({ ts: new Date().toISOString(), act: act, name: name || "", detail: detail || "" });
     if (S.audit.length > 400) S.audit = S.audit.slice(-400);
   }
 
@@ -636,8 +670,8 @@ svg { flex: none; }
   }
 
   /* thanh thời gian chết: vẽ bằng một gradient duy nhất, không tạo 90 thẻ con */
-  function timelineBG(a, d) {
-    var today = todayISO(), span = d.span, w0 = addDays(today, -(span - 1)), end = addDays(today, 1);
+  function timelineBG(a, span) {
+    var today = todayISO(), w0 = addDays(today, -(span - 1)), end = addDays(today, 1);
     var segs = [];
     (a.blocks || []).forEach(function (b) {
       var s = b.from > w0 ? b.from : w0;
@@ -1081,7 +1115,7 @@ svg { flex: none; }
       '<div class="mfoot"><span>Đã nhận tháng này <b>' + usdF(gotM) + "</b> / " + usdF(a.monthlyIncomeUSD) +
       "</span><span>" + usdF(d.perUSD) + " × " + d.per + " lần</span></div>" +
 
-      '<div class="tl"><div class="tl-bar" style="background:' + timelineBG(a, d) + '"></div>' +
+      '<div class="tl"><div class="tl-bar" style="background:' + timelineBG(a, d.span) + '"></div>' +
       '<div class="tl-cap"><span class="vd v-' + v.k + '">' + v.l + " — " + v.r + "</span>" +
       (d.blockCount ? '<button class="link" data-act="bhist" data-id="' + a.id + '">' + d.blockCount +
         " lần block</button>" : '<span>' + d.span + " ngày liền không lỗi</span>") + "</div></div>" +
@@ -1170,12 +1204,112 @@ svg { flex: none; }
     return '<div class="insight">' + out.join("<span>·</span>") + "</div>";
   }
 
+  function chartHTML() {
+    if (!S.accounts.length) {
+      return '<div class="empty">' + ic("history", 22) + "<h3>Chưa có dữ liệu để vẽ</h3>" +
+        "<p>Thêm tài khoản và ghi vài lần thu chi, biểu đồ sẽ tự dựng.</p></div>";
+    }
+    var today = todayISO(), d0 = fromISO(today), out = "";
+
+    /* ---------- A. Dòng tiền thực tế 6 tháng ---------- */
+    var months = [], flow = {};
+    for (var i = 5; i >= 0; i--) {
+      var dd = new Date(d0.getFullYear(), d0.getMonth() - i, 1);
+      var k = dd.getFullYear() + "-" + pad(dd.getMonth() + 1);
+      months.push(k); flow[k] = { in: 0, out: 0 };
+    }
+    S.accounts.forEach(function (a) {
+      (a.recvLog || []).forEach(function (e) { var k = e.gotOn.slice(0, 7); if (flow[k]) flow[k].in += num(e.amountVND); });
+      (a.log || []).forEach(function (e) { var k = e.paidOn.slice(0, 7); if (flow[k]) flow[k].out += num(e.amountVND); });
+    });
+    var mxF = 1, tIn = 0, tOut = 0;
+    months.forEach(function (k) { mxF = Math.max(mxF, flow[k].in, flow[k].out); tIn += flow[k].in; tOut += flow[k].out; });
+
+    out += '<div class="ch"><div class="ch-h"><span>Dòng tiền thực tế</span><span class="mono ' +
+      (tIn - tOut >= 0 ? "t-green" : "t-red") + '">' + vnd(tIn - tOut) + " / 6 tháng</span></div><div class=\"ch-b\">";
+    months.forEach(function (k) {
+      var f = flow[k], net = f.in - f.out, mm = k.split("-");
+      out += '<div class="cf"><span class="cf-m mono">' + mm[1] + "/" + mm[0].slice(2) + "</span>" +
+        '<div class="cf-bars"><div class="cf-b cin" style="width:' + (f.in / mxF * 100) + '%"></div>' +
+        '<div class="cf-b cout" style="width:' + (f.out / mxF * 100) + '%"></div></div>' +
+        '<span class="cf-n mono ' + (net >= 0 ? "t-green" : "t-red") + '">' +
+        (net > 0 ? "+" : "") + vndShort(net) + "</span></div>";
+    });
+    out += '<div class="ch-lg"><span><i class="sw cin"></i>thu ' + vndShort(tIn) +
+      '</span><span><i class="sw cout"></i>chi ' + vndShort(tOut) + "</span></div>" +
+      '<p class="ch-note">Tiền thật đã tick, không phải con số cam kết. Cột thu thấp hơn chi kéo dài là dấu hiệu phải dừng thuê.</p></div>';
+
+    /* ---------- B. Tỷ lệ hoạt động theo tháng ---------- */
+    out += '<div class="ch"><div class="ch-h"><span>Tỷ lệ hoạt động toàn danh mục</span><span class="mono">uptime</span></div><div class="ch-b">';
+    months.forEach(function (k) {
+      var mm = k.split("-");
+      var mStart = k + "-01";
+      var lastD = new Date(+mm[0], +mm[1], 0).getDate();
+      var mEnd = k + "-" + pad(lastD);
+      if (mEnd > today) mEnd = today;
+      var tot = 0, blk = 0;
+      S.accounts.forEach(function (a) {
+        var st = a.rentDate > mStart ? a.rentDate : mStart;
+        if (st > mEnd) return;
+        tot += diffDays(st, mEnd) + 1;
+        (a.blocks || []).forEach(function (b) {
+          var bs = b.from > st ? b.from : st;
+          var be = b.to || today; if (be > mEnd) be = mEnd;
+          var kk = diffDays(bs, be); if (kk > 0) blk += kk;
+        });
+      });
+      var up = tot > 0 ? (tot - blk) / tot : 1;
+      out += '<div class="cf"><span class="cf-m mono">' + mm[1] + "/" + mm[0].slice(2) + "</span>" +
+        '<div class="up-track"><i style="width:' + (up * 100) + "%;background:" +
+        (up < S.minUptime / 100 ? "var(--red)" : "var(--green)") + '"></i></div>' +
+        '<span class="cf-n mono">' + (tot ? Math.round(up * 100) + "%" : "—") + "</span></div>";
+    });
+    out += '<p class="ch-note">Tính trên tổng số ngày-tài khoản trong tháng. Tháng nào tụt sâu, mở Nhật ký xem hôm đó anh đổi gì.</p></div>';
+
+    /* ---------- C. Bao nhiêu ngày thì bị block ---------- */
+    var life = S.accounts.map(function (a) {
+      var fb = null;
+      (a.blocks || []).forEach(function (b) { if (!fb || b.from < fb) fb = b.from; });
+      return { a: a, days: diffDays(a.rentDate, fb || today), hit: !!fb };
+    }).sort(function (x, y) { return x.days - y.days; });
+    var hits = life.filter(function (x) { return x.hit; }).map(function (x) { return x.days; });
+    var med = hits.length ? (hits.length % 2 ? hits[(hits.length - 1) / 2]
+      : Math.round((hits[hits.length / 2 - 1] + hits[hits.length / 2]) / 2)) : null;
+    var mxL = Math.max(1, life.length ? life[life.length - 1].days : 1);
+
+    out += '<div class="ch"><div class="ch-h"><span>Thuê bao nhiêu ngày thì dính block</span><span class="mono">' +
+      (med !== null ? "trung vị " + med + " ngày" : "chưa có mẫu") + "</span></div><div class=\"ch-b\">";
+    life.forEach(function (x) {
+      out += '<div class="cf"><span class="cf-m life-n">' + pad(num(x.a.seq)) + " " + esc(x.a.name) + "</span>" +
+        '<div class="up-track"><i style="width:' + (x.days / mxL * 100) + "%;background:" +
+        (x.hit ? "var(--red)" : "var(--green)") + '"></i></div>' +
+        '<span class="cf-n mono">' + x.days + (x.hit ? "n" : "n+") + "</span></div>";
+    });
+    out += '<div class="ch-lg"><span><i class="sw cred"></i>đã dính block</span><span><i class="sw cgrn"></i>chưa dính, còn đang chạy</span></div>' +
+      '<p class="ch-note">' + (med !== null
+        ? "Một nửa số acc dính block trong vòng <b>" + med + " ngày</b> đầu. Acc nào vượt mốc này mà vẫn sạch thì đáng giữ và nhân thêm."
+        : "Chưa acc nào bị block. Khi có mẫu, mục này sẽ cho biết ngưỡng ngày cần cảnh giác.") + "</p></div>";
+
+    /* ---------- D. Bản đồ block 90 ngày ---------- */
+    var span = 90;
+    out += '<div class="ch"><div class="ch-h"><span>Bản đồ ngày chết ' + span +
+      ' ngày</span><span class="mono">' + dm(addDays(today, -(span - 1))) + " → " + dm(today) + "</span></div><div class=\"ch-b\">";
+    S.accounts.forEach(function (a) {
+      var dd = derive(a);
+      out += '<div class="cf"><span class="cf-m life-n">' + pad(num(a.seq)) + " " + esc(a.name) + "</span>" +
+        '<div class="map-bar" style="background:' + timelineBG(a, span) + '"></div>' +
+        '<span class="cf-n mono">' + Math.round(dd.uptime * 100) + "%</span></div>";
+    });
+    out += '<p class="ch-note">Các vạch đỏ thẳng hàng nhau theo chiều dọc nghĩa là nhiều acc chết cùng ngày — đó là lỗi hệ thống phía anh, không phải xui.</p></div>';
+
+    return '<div class="charts">' + out + "</div>";
+  }
+
   function auditHTML() {
     var L = (S.audit || []).slice().reverse();
     if (!L.length) {
       return '<div class="empty">' + ic("history", 22) + "<h3>Nhật ký trống</h3>" +
-        "<p>Mọi thao tác từ giờ sẽ được ghi lại kèm ngày giờ và tên người thao tác. " +
-        "Đặt tên máy trong Cài đặt để phân biệt ai đã làm gì.</p></div>";
+        "<p>Mọi thao tác từ giờ sẽ được ghi lại kèm ngày giờ.</p></div>";
     }
     var m = {}, keys = [];
     L.forEach(function (e) {
@@ -1190,15 +1324,13 @@ svg { flex: none; }
         var tm = e.ts.slice(11, 16);
         rows += '<tr><td class="mono lt-d">' + tm + '</td><td class="lt-n">' + esc(e.act) +
           (e.name ? ' <span class="au-n">' + esc(e.name) + "</span>" : "") +
-          '</td><td class="lt-w">' + esc(e.detail) + '</td><td class="lt-a au-w">' +
-          (e.who ? esc(e.who) : "—") + "</td></tr>";
+          '</td><td class="lt-w">' + esc(e.detail) + "</td></tr>";
       });
       out += '<div class="lmonth"><div class="lmonth-h"><span>' + dmy(k) +
         '</span><span class="mono">' + m[k].length + " thao tác</span></div>" +
         '<table class="ltab"><tbody>' + rows + "</tbody></table></div>";
     });
-    return out + '</div><p class="foot">Nhật ký giữ 400 thao tác gần nhất và đồng bộ cùng dữ liệu, ' +
-      'nên máy khác cũng thấy đúng lịch sử này.</p>';
+    return out + '</div><p class="foot">Giữ 400 thao tác gần nhất, đồng bộ cùng dữ liệu.</p>';
   }
 
   function ledgerHTML() {
@@ -1280,10 +1412,12 @@ svg { flex: none; }
     document.getElementById("sortWrap").className = showAcc ? "" : "hide";
     document.getElementById("tabAcc").className = showAcc ? "on" : "";
     document.getElementById("tabLed").className = S.tab === "ledger" ? "on" : "";
+    document.getElementById("tabCh").className = S.tab === "chart" ? "on" : "";
     document.getElementById("tabLog").className = S.tab === "audit" ? "on" : "";
 
     var list = document.getElementById("list");
     if (S.tab === "ledger") { list.className = ""; list.innerHTML = ledgerHTML(); return; }
+    if (S.tab === "chart") { list.className = ""; list.innerHTML = chartHTML(); return; }
     if (S.tab === "audit") { list.className = ""; list.innerHTML = auditHTML(); return; }
 
     var v = rows.filter(function (r) {
@@ -1334,7 +1468,7 @@ svg { flex: none; }
   var SUPABASE_KEY = "sb_publishable_wAbx1FVWMiIbq4QRTpSccA_O6cPwn8K";
 
   var CKEY = "acct-rental-cloud-v1";
-  var CFG = { url: SUPABASE_URL, key: SUPABASE_KEY, token: "", refresh: "", uid: "", email: "", who: "" };
+  var CFG = { url: SUPABASE_URL, key: SUPABASE_KEY, token: "", refresh: "", uid: "", email: "" };
   var syncSt = "off", syncMsg = "Chưa đồng bộ", pushTimer = null, pulling = false;
 
   function cfgLoad() {
@@ -1344,7 +1478,7 @@ svg { flex: none; }
       var d = JSON.parse(raw);
       CFG.url = SUPABASE_URL || d.url || ""; CFG.key = SUPABASE_KEY || d.key || "";
       CFG.token = d.token || ""; CFG.refresh = d.refresh || "";
-      CFG.uid = d.uid || ""; CFG.email = d.email || ""; CFG.who = d.who || "";
+      CFG.uid = d.uid || ""; CFG.email = d.email || "";
     } catch (e) {}
   }
   function cfgSave() {
@@ -1796,10 +1930,6 @@ svg { flex: none; }
       '<p class="hint">CSV mở được bằng Excel, dùng để đối chiếu hoặc chứng minh. Sao kê riêng từng tài khoản lấy ở nút <b>Sao kê</b> trên mỗi thẻ.</p>' +
       '<p class="hint">Nạp từ file sẽ thay thế toàn bộ sổ hiện tại. Nên xuất file mỗi tháng một lần và lưu lên Drive.</p>' +
       '<div class="rule"></div>' +
-      '<label class="fl" for="fWho">Tên người thao tác trên máy này</label>' +
-      '<input class="in" id="fWho" value="' + esc(CFG.who || "") + '" placeholder="VD: Tôi, hoặc Trợ lý A">' +
-      '<p class="hint">Tên này gắn vào từng dòng trong tab <b>Nhật ký</b>. Đưa máy cho người khác dùng thì đặt tên khác để biết ai đã sửa gì. Lưu riêng trên mỗi máy.</p>' +
-      '<div class="rule"></div>' +
       '<label class="fl">Đồng bộ nhiều thiết bị</label>' +
       '<p class="hint">' + (CFG.token
         ? "Đang đăng nhập <b>" + esc(CFG.email) + "</b> — " + syncMsg + "."
@@ -1840,6 +1970,45 @@ svg { flex: none; }
     a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
+  /* số ngày block rơi vào khoảng (d1, d2] — dùng để đối chiếu giãn cách lịch */
+  function blockedBetween(a, d1, d2) {
+    var n = 0, today = todayISO();
+    (a.blocks || []).forEach(function (b) {
+      var st = b.from > d1 ? b.from : d1;
+      var en = b.to || today;
+      if (en > d2) en = d2;
+      var k = diffDays(st, en);
+      if (k > 0) n += k;
+    });
+    return n;
+  }
+
+  /* dựng chuỗi giao dịch kèm cột đối chiếu giãn cách */
+  function seriesRows(a, kind) {
+    var cd = num(a.payoutCycleDays) || 15;
+    var std = kind === "in" ? cd : 7;
+    var src = kind === "in" ? (a.recvLog || []) : (a.log || []);
+    var list = src.slice().sort(function (x, y) {
+      return String(x.dueOn).localeCompare(String(y.dueOn));
+    });
+    var prev = null;
+    return list.map(function (e) {
+      var gap = prev ? diffDays(prev, e.dueOn) : "";
+      var bd = prev ? blockedBetween(a, prev, e.dueOn) : "";
+      var expect = prev ? std + bd : "";
+      var ok = prev === null ? "lần đầu"
+        : (gap === expect ? "Đúng lịch" : (gap > expect ? "Giãn thừa " : "Hụt ") + Math.abs(gap - expect) + " ngày");
+      prev = e.dueOn;
+      return {
+        on: kind === "in" ? e.gotOn : e.paidOn,
+        due: e.dueOn,
+        label: kind === "in" ? "Nhận lần " + e.seq : "Trả tuần " + e.week + "/4",
+        gap: gap, bd: bd, expect: expect, ok: ok,
+        usd: kind === "in" ? num(e.amountUSD) : "", vnd: num(e.amountVND)
+      };
+    });
+  }
+
   function txRows(a) {
     var r = [];
     (a.log || []).forEach(function (e) {
@@ -1873,42 +2042,75 @@ svg { flex: none; }
 
   function exportCSVAcc(id) {
     var a = byId(id); if (!a) return;
-    var d = derive(a);
+    var d = derive(a), today = todayISO();
     var t = "SAO KÊ TÀI KHOẢN THUÊ\r\n";
     t += csvLine("Xuất lúc", new Date().toLocaleString("vi-VN"));
+
     t += "\r\n" + "THÔNG TIN\r\n";
     t += csvLine("Số thứ tự", a.seq) + csvLine("Tên tài khoản", a.name) +
-      csvLine("Ngày thuê", dmy(a.rentDate)) + csvLine("Số kết nối", num(a.connections)) +
+      csvLine("Ngày thuê", dmy(a.rentDate)) + csvLine("Số ngày đã thuê", diffDays(a.rentDate, today)) +
+      csvLine("Số kết nối", num(a.connections)) +
       csvLine("Thu cam kết / tháng (USD)", num(a.monthlyIncomeUSD)) +
-      csvLine("Chu kỳ nhận", d.cd + " ngày · " + d.per + " lần/tháng") +
+      csvLine("Chu kỳ nhận", d.cd + " ngày · " + d.per + " lần mỗi chu kỳ") +
       csvLine("Chi / tháng (VND)", num(a.monthlyCostVND)) +
       csvLine("Trả theo tuần (VND)", Math.round(d.weekly)) +
       csvLine("Tỷ giá áp dụng", S.rate);
+
     t += "\r\n" + "TÌNH TRẠNG\r\n";
     t += csvLine("Số lần bị block", d.blockCount) + csvLine("Tổng ngày chết", d.blockDaysTotal) +
-      csvLine("Uptime (" + d.span + " ngày)", Math.round(d.uptime * 100) + "%") +
-      csvLine("Chu kỳ đã chốt", d.closedCyc) +
+      csvLine("Uptime (" + d.span + " ngày gần nhất)", Math.round(d.uptime * 100) + "%") +
+      csvLine("Đang bị block", d.cur ? "CÓ — từ " + dmy(d.cur.from) : "Không") +
+      csvLine("Chu kỳ nhận đã chốt", d.closedCyc) +
       csvLine("Tỷ lệ nhận đủ", Math.round(d.fill * 100) + "%") +
-      csvLine("Hụt tích luỹ (USD)", Math.round(d.shortUSD * 100) / 100);
-    t += "\r\n" + "CHI TIẾT GIAO DỊCH\r\n";
-    t += csvLine("Ngày", "Loại", "Nội dung", "USD", "VND");
-    var rows = txRows(a).sort(function (x, y) { return String(x[0]).localeCompare(String(y[0])); });
-    var sIn = 0, sOut = 0, uIn = 0;
-    rows.forEach(function (r) {
-      if (r[2] === "THU") { sIn += num(r[5]); uIn += num(r[4]); } else sOut += num(r[5]);
-      t += csvLine(dmy(r[0]), r[2], r[3], r[4], r[5]);
-    });
-    t += "\r\n" + csvLine("TỔNG ĐÃ NHẬN (USD)", Math.round(uIn * 100) / 100) +
-      csvLine("TỔNG ĐÃ NHẬN (VND)", sIn) + csvLine("TỔNG ĐÃ TRẢ (VND)", sOut) +
-      csvLine("CHÊNH LỆCH (VND)", sIn - sOut);
-    if ((a.blocks || []).length) {
-      t += "\r\n" + "LỊCH SỬ BLOCK\r\n" + csvLine("Từ ngày", "Đến ngày", "Số ngày", "Lý do");
-      a.blocks.forEach(function (b) {
-        t += csvLine(dmy(b.from), b.to ? dmy(b.to) : "đang block", blockDays(b, todayISO()), b.reason || "");
+      csvLine("Hụt tích luỹ (USD)", Math.round(d.shortUSD * 100) / 100) +
+      csvLine("Mốc trả hiện tại", dmy(a.anchor)) +
+      csvLine("Mốc nhận hiện tại", dmy(a.payAnchor));
+
+    /* ---- block: ghi rõ dừng từ ngày nào, nối lại ngày nào, dời lịch bao nhiêu ---- */
+    t += "\r\n" + "LỊCH SỬ BLOCK — DỪNG VÀ NỐI LẠI LỊCH\r\n";
+    if (!(a.blocks || []).length) {
+      t += csvLine("Chưa có lần block nào");
+    } else {
+      t += csvLine("Lần", "Dừng từ ngày", "Nối lại từ ngày", "Số ngày chết",
+        "Lịch TRẢ dời (ngày)", "Lịch NHẬN dời (ngày)", "Lý do");
+      a.blocks.forEach(function (b, i) {
+        t += csvLine(i + 1, dmy(b.from), b.to ? dmy(b.to) : "chưa mở",
+          blockDays(b, today), b.shiftA || 0, b.shiftP || 0, b.reason || "");
       });
+      var tot = 0; a.blocks.forEach(function (b) { tot += num(b.shiftA); });
+      t += csvLine("TỔNG SỐ NGÀY ĐÃ DỜI LỊCH", tot);
     }
+
+    /* ---- chi: đối chiếu giãn cách 7 ngày ---- */
+    var out = seriesRows(a, "out"), inn = seriesRows(a, "in");
+    t += "\r\n" + "CHI TIẾT THANH TOÁN — CHUẨN 7 NGÀY / LẦN\r\n";
+    t += csvLine("Ngày ghi nhận", "Nội dung", "Hạn theo lịch", "Cách hạn trước (ngày)",
+      "Trong đó block (ngày)", "Chuẩn phải là (ngày)", "Đối chiếu", "VND");
+    var sOut = 0;
+    out.forEach(function (r) {
+      sOut += num(r.vnd);
+      t += csvLine(dmy(r.on), r.label, dmy(r.due), r.gap, r.bd, r.expect, r.ok, r.vnd);
+    });
+    if (!out.length) t += csvLine("Chưa có khoản thanh toán nào");
+
+    /* ---- thu: đối chiếu giãn cách theo chu kỳ nhận ---- */
+    t += "\r\n" + "CHI TIẾT NHẬN TIỀN — CHUẨN " + d.cd + " NGÀY / LẦN\r\n";
+    t += csvLine("Ngày ghi nhận", "Nội dung", "Dự kiến theo lịch", "Cách lần trước (ngày)",
+      "Trong đó block (ngày)", "Chuẩn phải là (ngày)", "Đối chiếu", "USD", "VND");
+    var sIn = 0, uIn = 0;
+    inn.forEach(function (r) {
+      sIn += num(r.vnd); uIn += num(r.usd);
+      t += csvLine(dmy(r.on), r.label, dmy(r.due), r.gap, r.bd, r.expect, r.ok, r.usd, r.vnd);
+    });
+    if (!inn.length) t += csvLine("Chưa ghi nhận lần nhận tiền nào");
+
+    t += "\r\n" + "TỔNG KẾT\r\n";
+    t += csvLine("TỔNG ĐÃ NHẬN (USD)", Math.round(uIn * 100) / 100) +
+      csvLine("TỔNG ĐÃ NHẬN (VND)", sIn) + csvLine("TỔNG ĐÃ TRẢ (VND)", sOut) +
+      csvLine("CHÊNH LỆCH THỰC TẾ (VND)", sIn - sOut);
+
     download("sao-ke-" + a.name.replace(/[^a-zA-Z0-9-_]/g, "_") + "-" + todayISO() + ".csv", t);
-    audit("Xuất dữ liệu", a.name, "sao kê riêng · " + rows.length + " giao dịch");
+    audit("Xuất sao kê", a.name, (out.length + inn.length) + " giao dịch");
     save();
   }
 
@@ -1992,8 +2194,6 @@ svg { flex: none; }
     else if (act === "pushNow") { closeModal(); S.updatedAt = new Date().toISOString(); saveLocal(); push(); }
     else if (act === "saveRate") {
       var up = num(document.getElementById("fUp").value), mg = num(document.getElementById("fMg").value);
-      var wEl = document.getElementById("fWho");
-      if (wEl) { CFG.who = wEl.value.trim(); cfgSave(); }
       if (up > 0 && up <= 100) S.minUptime = up;
       if (mg > 0 && mg <= 100) S.minMargin = mg;
       save(); closeModal(); render();
