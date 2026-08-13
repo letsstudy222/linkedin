@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BandUp — Tự học IELTS từ 0 đến 7.0</title>
+<meta name="description" content="Web tự học IELTS miễn phí: kiến thức chia nhỏ theo từng mốc 0.5 band, đủ 4 kỹ năng Reading, Writing, Speaking, Listening, từ nền tảng đến 7.0.">
+<!--
+════════════════════════════════════════════════════════════════════
+BANDUP · DEV CONTRACT (quy ước kỹ thuật — KHÔNG XOÁ khối chú thích này)
+Các trang nội dung tạo ở những lần chat sau PHẢI tuân thủ quy ước dưới
+đây để index.html tự nhận tiến độ mà không cần sửa lại.
+
+1. DANH SÁCH FILE (self-contained, mỗi file tự chứa CSS/JS):
+   index.html · guide.html · foundation.html · reading.html
+   writing.html · speaking.html · listening.html
+
+2. MÃ NHÓM BAND (band group code):
+   f  = Nền tảng → 4.0        b1 = 4.0 → 5.0
+   b2 = 5.0 → 5.5             b3 = 5.5 → 6.0
+   b4 = 6.0 → 6.5             b5 = 6.5 → 7.0
+   (mở rộng sau: b6 = 7.0 → 7.5 ...)
+
+3. MÃ TRANG (page key): guide, foundation (fd), reading (rd),
+   writing (wr), speaking (sp), listening (ls)
+
+4. ID BÀI HỌC: <mã trang>-<band code>-<số 2 chữ số>
+   Ví dụ: rd-b1-01, wr-b3-04, fd-f-12
+
+5. LOCALSTORAGE KEYS (chung toàn site):
+   bandup.done              → JSON array các lesson id đã tick hoàn thành
+   bandup.manifest.<key>    → JSON: { page, title, updated,
+                                lessons:[{ id, band, title }] }
+   Mỗi trang nội dung KHI LOAD phải tự ghi manifest của chính nó
+   (quét toàn bộ lesson trên trang). index.html chỉ ĐỌC, không ghi.
+
+6. TÍNH NĂNG TRANG NỘI DUNG: mỗi bài học có nút tick "Đã học xong"
+   (ghi vào bandup.done), 3–5 câu luyện tập + nút xem đáp án,
+   band cao dùng tiếng Anh kèm chú thích Việt + hộp "Tóm tắt nhanh".
+
+7. MỞ KHOÁ TỰ ĐỘNG: index.html tự fetch HEAD từng file khi chạy trên
+   GitHub Pages; file nào tồn tại thì card mở khoá — KHÔNG cần sửa
+   index.html khi thêm trang mới.
+════════════════════════════════════════════════════════════════════
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF7F1;
+  --card:#FFFFFF;
+  --ink:#12283A;
+  --ink-soft:#4A5D6E;
+  --line:#E4DFD3;
+  --accent:#FFD64D;        /* vàng bút dạ quang — màu chủ đạo */
+  --accent-deep:#E8B400;
+  --accent-ink:#5C4A00;
+  --c-fd:#3C6E9C;          /* nền tảng */
+  --c-rd:#0E7C5B;          /* reading */
+  --c-wr:#C05621;          /* writing */
+  --c-sp:#B03A66;          /* speaking */
+  --c-ls:#5A4FB5;          /* listening */
+  --radius:16px;
+  --shadow:0 1px 2px rgba(18,40,58,.06),0 10px 28px -18px rgba(18,40,58,.22);
+  --font-display:"Baloo 2",system-ui,sans-serif;
+  --font-body:"Nunito",system-ui,sans-serif;
+  --font-mono:"Nunito",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(min-width:640px){html{font-size:17px}}
+body{
+  font-family:var(--font-body);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent-deep);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+
+/* ── Topbar ─────────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(250,247,241,.9);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.topbar .wrap{display:flex;align-items:center;gap:22px;height:62px}
+.logo{
+  font-family:var(--font-display);font-weight:800;font-size:1.3rem;
+  letter-spacing:-.02em;text-decoration:none;display:flex;align-items:center;gap:9px;
+}
+.logo .dot{
+  width:22px;height:22px;border-radius:6px;background:var(--accent);
+  border:2px solid var(--ink);display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:.62rem;font-weight:700;
+}
+.topnav{display:flex;gap:4px;margin-left:auto}
+.topnav a{
+  text-decoration:none;font-size:.9rem;font-weight:500;color:var(--ink-soft);
+  padding:7px 12px;border-radius:8px;transition:background .15s,color .15s;
+}
+.topnav a:hover{background:#EBEDE4;color:var(--ink)}
+.topnav a.cta{
+  background:var(--ink);color:#fff;font-weight:600;
+}
+.topnav a.cta:hover{background:#0C1D2B;color:#fff}
+@media(max-width:720px){.topnav a:not(.cta){display:none}}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero{padding:64px 0 56px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:end}
+@media(max-width:880px){.hero .wrap{grid-template-columns:1fr;gap:40px}}
+.eyebrow{
+  font-family:var(--font-mono);font-size:.8rem;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:18px;
+}
+.eyebrow::before{content:"";width:26px;height:3px;background:var(--accent);border-radius:2px}
+.hero h1{
+  font-family:var(--font-display);font-weight:800;
+  font-size:clamp(2.2rem,4.6vw,3.4rem);line-height:1.08;letter-spacing:-.025em;
+  margin-bottom:20px;
+}
+.hero h1 mark{
+  background:linear-gradient(transparent 58%,var(--accent) 58%);
+  color:inherit;padding:0 2px;
+}
+.hero p.lead{font-size:1.06rem;color:var(--ink-soft);max-width:34rem;margin-bottom:30px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-body);font-weight:600;font-size:.95rem;
+  padding:13px 22px;border-radius:11px;text-decoration:none;cursor:pointer;
+  border:2px solid var(--ink);transition:transform .15s,box-shadow .15s,background .15s;
+}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px -10px rgba(18,40,58,.5)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:#EBEDE4}
+.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+/* Cầu thang band — signature */
+.stairs{display:flex;align-items:flex-end;gap:7px;height:230px}
+@media(max-width:880px){.stairs{height:180px;max-width:440px}}
+.stair{
+  flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  gap:8px;min-width:0;
+}
+.stair .bar{
+  width:100%;border:2px solid var(--ink);border-radius:8px 8px 4px 4px;
+  background:var(--card);position:relative;overflow:hidden;
+  transition:background .4s;
+}
+.stair .bar::after{
+  content:"";position:absolute;inset:auto 0 0 0;height:0%;
+  background:var(--accent);transition:height .8s cubic-bezier(.2,.7,.2,1);
+}
+.stair.filled .bar::after{height:100%}
+.stair .lbl{
+  font-family:var(--font-mono);font-size:.74rem;font-weight:700;color:var(--ink-soft);
+  white-space:nowrap;
+}
+.stair:nth-child(1) .bar{height:16%}
+.stair:nth-child(2) .bar{height:30%}
+.stair:nth-child(3) .bar{height:44%}
+.stair:nth-child(4) .bar{height:58%}
+.stair:nth-child(5) .bar{height:72%}
+.stair:nth-child(6) .bar{height:86%}
+.stair:nth-child(7) .bar{height:100%}
+.stairs-cap{
+  font-size:.78rem;color:var(--ink-soft);margin-top:12px;
+  font-family:var(--font-mono);
+}
+
+/* ── Section chung ──────────────────────────────────── */
+section{padding:56px 0}
+.sec-head{margin-bottom:34px;max-width:44rem}
+.sec-head h2{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.02em;margin-bottom:10px;
+}
+.sec-head p{color:var(--ink-soft)}
+
+/* ── Cards lộ trình ─────────────────────────────────── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
+.card{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
+  padding:24px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:var(--shadow);position:relative;
+  transition:transform .18s,border-color .18s;
+}
+.card[data-status="ready"]:hover{transform:translateY(-3px);border-color:var(--ink)}
+.card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.card h3{
+  font-family:var(--font-display);font-weight:700;font-size:1.22rem;letter-spacing:-.01em;
+}
+.card h3 a{text-decoration:none}
+.card h3 a::after{content:"";position:absolute;inset:0;border-radius:var(--radius)}
+.card p.desc{font-size:.92rem;color:var(--ink-soft);flex:1}
+.badge{
+  font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.06em;
+  padding:4px 9px;border-radius:999px;white-space:nowrap;
+  border:1.5px solid currentColor;
+}
+.badge.start{background:var(--accent);border-color:var(--ink);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-family:var(--font-mono);font-size:.74rem;font-weight:700;
+  padding:3px 8px;border-radius:6px;background:var(--paper);
+  border:1px solid var(--line);color:var(--ink-soft);
+}
+.card .meter{display:flex;flex-direction:column;gap:6px}
+.meter .row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-soft)}
+.meter .row b{font-family:var(--font-mono);color:var(--ink)}
+.track{height:8px;background:var(--paper);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;width:0%;background:var(--barcolor,var(--accent));border-radius:99px;transition:width .7s ease}
+.card[data-status="coming"]{opacity:.62}
+.card[data-status="coming"] .lock{
+  font-size:.78rem;color:var(--ink-soft);display:flex;align-items:center;gap:7px;
+  font-family:var(--font-mono);
+}
+.spine{position:absolute;left:0;top:18px;bottom:18px;width:5px;border-radius:0 4px 4px 0;background:var(--spine,var(--ink))}
+
+/* ── Tiến độ ────────────────────────────────────────── */
+.progress-panel{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:30px;display:grid;gap:34px;
+  grid-template-columns:1fr 1fr;
+}
+@media(max-width:820px){.progress-panel{grid-template-columns:1fr}}
+.progress-panel h3{
+  font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.pbar{margin-bottom:14px}
+.pbar .row{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:5px}
+.pbar .row b{font-family:var(--font-mono);font-size:.78rem}
+.empty-note{
+  grid-column:1/-1;text-align:center;padding:26px 18px;
+  border:1.5px dashed var(--line);border-radius:12px;color:var(--ink-soft);font-size:.92rem;
+}
+.progress-tools{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:20px}
+.progress-tools .total{font-family:var(--font-mono);font-size:.85rem}
+.progress-tools .total b{font-size:1.3rem;color:var(--ink)}
+.btn-danger{
+  background:none;border:1.5px solid var(--line);color:var(--ink-soft);
+  font-size:.82rem;font-weight:600;padding:9px 15px;border-radius:9px;cursor:pointer;
+  font-family:var(--font-body);transition:border-color .15s,color .15s;
+}
+.btn-danger:hover{border-color:#B23A3A;color:#B23A3A}
+
+/* ── Học đúng cách ──────────────────────────────────── */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:820px){.steps{grid-template-columns:1fr}}
+.step{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
+  padding:24px;box-shadow:var(--shadow);
+}
+.step .num{
+  font-family:var(--font-mono);font-weight:700;font-size:.72rem;
+  width:30px;height:30px;border-radius:8px;background:var(--accent);
+  border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;
+}
+.step h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.step p{font-size:.9rem;color:var(--ink-soft)}
+
+/* ── Thang điểm ─────────────────────────────────────── */
+.scale{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:30px;margin-top:18px;
+}
+.scale h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.scale p{font-size:.9rem;color:var(--ink-soft);margin-bottom:22px;max-width:46rem}
+.rail{display:flex;gap:4px}
+.rail .cell{
+  flex:1;text-align:center;font-family:var(--font-mono);font-size:.72rem;font-weight:700;
+  padding:10px 0;border:1.5px solid var(--line);border-radius:8px;color:var(--ink-soft);
+  background:var(--paper);
+}
+.rail .cell.covered{background:var(--accent);border-color:var(--ink);color:var(--ink)}
+.rail-cap{margin-top:12px;font-size:.78rem;color:var(--ink-soft);font-family:var(--font-mono)}
+@media(max-width:640px){.rail .cell{font-size:.6rem;padding:8px 0}}
+
+/* ── Footer ─────────────────────────────────────────── */
+footer{border-top:1px solid var(--line);padding:34px 0 44px;margin-top:30px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+footer p{font-size:.82rem;color:var(--ink-soft)}
+footer .mono{font-family:var(--font-mono);font-size:.72rem}
+
+/* ── Motion ─────────────────────────────────────────── */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.rise{animation:rise .6s ease both}
+.rise.d1{animation-delay:.08s}.rise.d2{animation-delay:.16s}.rise.d3{animation-delay:.24s}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="BandUp — về đầu trang">
+      <span class="dot">7.0</span> BandUp
+    </a>
+    <nav class="topnav" aria-label="Điều hướng chính">
+      <a href="#lotrinh">Lộ trình</a>
+      <a href="placement.html">Kiểm tra đầu vào</a>
+      <a href="vocab.html">Từ vựng</a>
+      <a href="#tiendo">Tiến độ</a>
+      <a href="#hocdung">Cách học</a>
+      <a class="cta" href="guide.html" data-page="guide">Hướng dẫn tự học</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="rise">
+        <span class="eyebrow">Tự học IELTS · Lộ trình theo band</span>
+        <h1>Leo từng bậc band,<br>từ con số 0 đến <mark>7.0</mark>.</h1>
+        <p class="lead">Kiến thức chia nhỏ theo từng mốc 0.5 band — học tới đâu chắc tới đó. Web này dạy kiến thức và chiến lược; phần luyện đề bạn làm ở nền tảng ôn thi đã có.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" id="resumeBtn" href="guide.html" data-page="guide">Bắt đầu với Hướng dẫn tự học</a>
+          <a class="btn btn-ghost" href="placement.html">Kiểm tra đầu vào · 25 phút</a>
+        </div>
+        <div id="placeBanner" style="display:none;margin-top:16px;border:1.5px solid var(--line);border-left:6px solid var(--accent);background:var(--card);border-radius:12px;padding:12px 16px;font-size:.9rem;max-width:34rem">
+          <b style="display:block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px">Kết quả kiểm tra đầu vào</b>
+          <span id="placeText"></span>
+        </div>
+      </div>
+      <div class="rise d2">
+        <div class="stairs" id="stairs" role="img" aria-label="Cầu thang band từ 0 đến 7.0, tô màu theo tiến độ học của bạn">
+          <div class="stair"><div class="bar"></div><span class="lbl">0</span></div>
+          <div class="stair"><div class="bar"></div><span class="lbl">4.0</span></div>
+          <div class="stair"><div class="bar"></div><span class="lbl">5.0</span></div>
+          <div class="stair"><div class="bar"></div><span class="lbl">5.5</span></div>
+          <div class="stair"><div class="bar"></div><span class="lbl">6.0</span></div>
+          <div class="stair"><div class="bar"></div><span class="lbl">6.5</span></div>
+          <div class="stair"><div class="bar"></div><span class="lbl">7.0</span></div>
+        </div>
+        <p class="stairs-cap" id="stairsCap">Bậc thang tô vàng theo % kiến thức bạn đã học.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LỘ TRÌNH -->
+  <section id="lotrinh">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Lộ trình học</h2>
+        <p>Đi theo thứ tự ưu tiên bên dưới. Trang nào đang xây dựng sẽ tự mở khoá khi nội dung được đưa lên.</p>
+      </div>
+      <div class="grid" id="moduleGrid"><!-- render bằng JS --></div>
+    </div>
+  </section>
+
+  <!-- LUYỆN TẬP -->
+  <section id="luyentap">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Luyện tập</h2>
+        <p>Lộ trình phía trên dạy bạn <em>cách làm</em>. Khu vực này là nơi bạn <em>thực sự làm</em> — có chấm điểm, có lịch ôn, có theo dõi tiến bộ.</p>
+      </div>
+      <div class="grid">
+        <a class="card" href="vocab.html" id="vocabCard">
+          <span class="card-tag" style="background:#7A5AA8;color:#fff">Từ vựng</span>
+          <h3>Học theo cụm từ</h3>
+          <p>Flashcard theo chùm, ba dạng quiz khó dần, lịch ôn giãn cách tự nhắc bạn đúng lúc sắp quên. Học cụm dùng được ngay thay vì từ đơn lẻ.</p>
+          <span class="card-meta" id="vocabMeta">Mở kho cụm →</span>
+        </a>
+        <a class="card" href="practice-reading.html" id="prCard">
+          <span class="card-tag" style="background:#0E7C5B;color:#fff">Luyện Reading</span>
+          <h3>Làm bài có chấm điểm</h3>
+          <p>Bài đọc nguyên bản, bấm giờ như thi thật, chấm tự động và quy đổi band. Phần chữa chỉ rõ câu nào trong bài chứa đáp án và cặp paraphrase bạn phải nhận ra.</p>
+          <span class="card-meta" id="prMeta">Mở danh sách bài →</span>
+        </a>
+        <a class="card" href="listening.html#nguon">
+          <span class="card-tag" style="background:#5A4FB5;color:#fff">Luyện nghe</span>
+          <h3>Nguồn nghe hằng ngày</h3>
+          <p>Bốn trang miễn phí đã kiểm tra còn hoạt động — chép chính tả, luyện số và tên riêng, đổi giọng Anh Úc Mỹ — kèm chỉ dẫn nguồn nào dùng cho bài học nào.</p>
+          <span class="card-meta">Xem 4 nguồn →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIẾN ĐỘ -->
+  <section id="tiendo">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Tiến độ của bạn</h2>
+        <p>Tiến độ lưu ngay trên trình duyệt này — tick "Đã học xong" trong từng bài để cập nhật. Đổi máy hoặc xoá dữ liệu trình duyệt sẽ mất tiến độ.</p>
+      </div>
+      <div class="progress-panel" id="progressPanel"><!-- render bằng JS --></div>
+    </div>
+  </section>
+
+  <!-- HỌC ĐÚNG CÁCH -->
+  <section id="hocdung">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Học đúng cách ngay từ đầu</h2>
+        <p>Ba bước lặp lại cho tới ngày thi. Chi tiết đầy đủ nằm trong Hướng dẫn tự học thông minh.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="num">1</span>
+          <h3>Đọc Hướng dẫn tự học</h3>
+          <p>Xác định band hiện tại, đặt mục tiêu, nắm phương pháp học chủ động trước khi lao vào kiến thức.</p>
+        </div>
+        <div class="step">
+          <span class="num">2</span>
+          <h3>Học theo từng mốc band</h3>
+          <p>Vào đúng nhóm band của bạn, học lần lượt từng bài, làm câu luyện tập rồi tick "Đã học xong".</p>
+        </div>
+        <div class="step">
+          <span class="num">3</span>
+          <h3>Luyện đề ở nền tảng riêng</h3>
+          <p>Kiến thức học ở đây, đề thi luyện ở web ôn thi bạn đã có. Sai ở đâu, quay lại đúng bài đó học lại.</p>
+        </div>
+      </div>
+
+      <div class="scale">
+        <h3>Web này phủ tới đâu trên thang điểm IELTS?</h3>
+        <p>IELTS chấm từ 0 đến 9.0 theo bước 0.5. BandUp dạy từ nền tảng tới 7.0 — mức đủ cho phần lớn yêu cầu du học và công việc. Cần cao hơn, nội dung 7.0+ sẽ được bổ sung sau.</p>
+        <div class="rail" aria-label="Thang điểm IELTS 0 đến 9, vùng web bao phủ từ 0 đến 7.0">
+          <div class="cell covered">0–3.5</div>
+          <div class="cell covered">4.0</div>
+          <div class="cell covered">4.5</div>
+          <div class="cell covered">5.0</div>
+          <div class="cell covered">5.5</div>
+          <div class="cell covered">6.0</div>
+          <div class="cell covered">6.5</div>
+          <div class="cell covered">7.0</div>
+          <div class="cell">7.5</div>
+          <div class="cell">8.0</div>
+          <div class="cell">8.5</div>
+          <div class="cell">9.0</div>
+        </div>
+        <p class="rail-cap">■ vùng vàng = phạm vi kiến thức hiện có trên BandUp</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>BandUp</strong> — tự học IELTS theo từng bậc band.</p>
+    <p class="mono">v1.6 · index · +nguồn luyện nghe · 08/2026</p>
+  </div>
+</footer>
+
+<script>
+/* ═══════════ CẤU HÌNH SITE ═══════════ */
+var BAND_LABELS = {
+  f:"Nền tảng → 4.0", b1:"4.0 → 5.0", b2:"5.0 → 5.5",
+  b3:"5.5 → 6.0", b4:"6.0 → 6.5", b5:"6.5 → 7.0"
+};
+var BAND_ORDER = ["f","b1","b2","b3","b4","b5"];
+
+var SITE_MAP = [
+  {
+    key:"guide", file:"guide.html", title:"Hướng dẫn tự học thông minh",
+    desc:"Phương pháp học chủ động, cách xác định trình độ, xây lịch học và dùng web này hiệu quả nhất. Đọc trước khi học bất cứ thứ gì.",
+    badge:"Đọc trước tiên", badgeClass:"start", color:"var(--ink)",
+    bands:[], status:"ready"
+  },
+  {
+    key:"foundation", file:"foundation.html", title:"Nền tảng → 4.0",
+    desc:"Ngữ pháp cốt lõi, từ vựng thiết yếu và phát âm cơ bản — phần gốc chung cho cả 4 kỹ năng trước khi tách luyện riêng.",
+    badge:"Gốc rễ", badgeClass:"", color:"var(--c-fd)",
+    bands:["f"], status:"ready"
+  },
+  {
+    key:"reading", file:"reading.html", title:"Reading",
+    desc:"Chiến lược đọc, cách xử lý 14 dạng câu hỏi, kỹ thuật skimming – scanning, paraphrase và từ vựng học thuật theo band.",
+    badge:"Ưu tiên 1", badgeClass:"", color:"var(--c-rd)",
+    bands:["b1","b2","b3","b4","b5"], status:"ready"
+  },
+  {
+    key:"writing", file:"writing.html", title:"Writing",
+    desc:"Task 1 và Task 2: hiểu tiêu chí chấm, cấu trúc bài, mẫu câu theo band, cách phát triển ý và lỗi khiến bài mất điểm.",
+    badge:"Ưu tiên 2", badgeClass:"", color:"var(--c-wr)",
+    bands:["b1","b2","b3","b4","b5"], status:"ready"
+  },
+  {
+    key:"speaking", file:"speaking.html", title:"Speaking",
+    desc:"Part 1–3: chiến lược trả lời, khung phát triển câu, phát âm, từ vựng theo chủ đề và cách tự luyện nói một mình.",
+    badge:"Ưu tiên 3", badgeClass:"", color:"var(--c-sp)",
+    bands:["b1","b2","b3","b4","b5"], status:"ready"
+  },
+  {
+    key:"listening", file:"listening.html", title:"Listening",
+    desc:"4 section của bài nghe, các dạng câu hỏi, kỹ thuật nghe chọn lọc, đoán trước đáp án và những bẫy hay gặp nhất.",
+    badge:"Ưu tiên 4", badgeClass:"", color:"var(--c-ls)",
+    bands:["b1","b2","b3","b4","b5"], status:"ready"
+  }
+];
+
+/* ═══════════ ĐỌC DỮ LIỆU TIẾN ĐỘ ═══════════ */
+function loadDone(){
+  try{
+    var raw = localStorage.getItem("bandup.done");
+    return new Set(raw ? JSON.parse(raw) : []);
+  }catch(e){ return new Set(); }
+}
+function loadManifest(key){
+  try{
+    var raw = localStorage.getItem("bandup.manifest." + key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function pageStats(key, doneSet){
+  var m = loadManifest(key);
+  if(!m || !m.lessons || !m.lessons.length) return null;
+  var total = m.lessons.length, done = 0;
+  m.lessons.forEach(function(ls){ if(doneSet.has(ls.id)) done++; });
+  return { total: total, done: done, pct: Math.round(done/total*100), lessons: m.lessons };
+}
+
+/* ═══════════ RENDER CARDS LỘ TRÌNH ═══════════ */
+function renderCards(){
+  var doneSet = loadDone();
+  var grid = document.getElementById("moduleGrid");
+  grid.innerHTML = "";
+  SITE_MAP.forEach(function(mod, i){
+    var st = pageStats(mod.key, doneSet);
+    var card = document.createElement("article");
+    card.className = "card rise";
+    card.style.animationDelay = (i*0.06)+"s";
+    card.dataset.status = mod.status;
+    card.dataset.key = mod.key;
+
+    var chips = mod.bands.map(function(b){
+      return '<span class="chip">'+BAND_LABELS[b]+'</span>';
+    }).join("");
+
+    var meter;
+    if(mod.status === "coming"){
+      meter = '<div class="lock">🔒 Đang xây dựng — sẽ tự mở khi nội dung lên</div>';
+    }else if(st){
+      meter = '<div class="meter">'
+        + '<div class="row"><span>Đã học</span><b>'+st.done+'/'+st.total+' bài · '+st.pct+'%</b></div>'
+        + '<div class="track"><i style="--barcolor:'+mod.color+';width:'+st.pct+'%"></i></div>'
+        + '</div>';
+    }else{
+      meter = '<div class="meter">'
+        + '<div class="row"><span>Chưa ghi nhận tiến độ</span><b>—</b></div>'
+        + '<div class="track"><i style="--barcolor:'+mod.color+';width:0%"></i></div>'
+        + '</div>';
+    }
+
+    var titleHTML = (mod.status === "ready")
+      ? '<a href="'+mod.file+'">'+mod.title+'</a>'
+      : mod.title;
+
+    card.innerHTML =
+      '<span class="spine" style="--spine:'+mod.color+'"></span>'
+      + '<div class="top"><h3>'+titleHTML+'</h3>'
+      + '<span class="badge '+mod.badgeClass+'" style="color:'+mod.color+'">'+mod.badge+'</span></div>'
+      + '<p class="desc">'+mod.desc+'</p>'
+      + (chips ? '<div class="chips">'+chips+'</div>' : "")
+      + meter;
+    grid.appendChild(card);
+  });
+}
+
+/* ═══════════ RENDER PANEL TIẾN ĐỘ ═══════════ */
+function bar(label, done, total, color){
+  var pct = total ? Math.round(done/total*100) : 0;
+  return '<div class="pbar">'
+    + '<div class="row"><span>'+label+'</span><b>'+done+'/'+total+' · '+pct+'%</b></div>'
+    + '<div class="track"><i style="--barcolor:'+color+';width:'+pct+'%"></i></div>'
+    + '</div>';
+}
+function renderProgress(){
+  var doneSet = loadDone();
+  var panel = document.getElementById("progressPanel");
+  var contentPages = SITE_MAP.filter(function(m){ return m.key !== "guide"; });
+
+  var anyData = false;
+  var skillHTML = "";
+  var bandAgg = {};
+  BAND_ORDER.forEach(function(b){ bandAgg[b] = {done:0,total:0}; });
+  var grandDone = 0, grandTotal = 0;
+
+  contentPages.forEach(function(mod){
+    var st = pageStats(mod.key, doneSet);
+    if(st){
+      anyData = true;
+      skillHTML += bar(mod.title, st.done, st.total, mod.color);
+      grandDone += st.done; grandTotal += st.total;
+      st.lessons.forEach(function(ls){
+        if(bandAgg[ls.band]){
+          bandAgg[ls.band].total++;
+          if(doneSet.has(ls.id)) bandAgg[ls.band].done++;
+        }
+      });
+    }else{
+      skillHTML += bar(mod.title, 0, 0, mod.color);
+    }
+  });
+
+  var bandHTML = "";
+  BAND_ORDER.forEach(function(b){
+    var a = bandAgg[b];
+    bandHTML += bar(BAND_LABELS[b], a.done, a.total, "var(--accent-deep)");
+  });
+
+  var grandPct = grandTotal ? Math.round(grandDone/grandTotal*100) : 0;
+
+  var html = "";
+  if(!anyData){
+    html += '<div class="empty-note">Chưa có dữ liệu tiến độ. Mở một trang kỹ năng và tick "Đã học xong" ở bài đầu tiên — tiến độ sẽ hiện tại đây.</div>';
+  }
+  html += '<div><h3>Theo kỹ năng</h3>'+skillHTML+'</div>';
+  html += '<div><h3>Theo mốc band</h3>'+bandHTML+'</div>';
+  html += '<div class="progress-tools">'
+    + '<span class="total">Tổng tiến độ: <b>'+grandPct+'%</b> ('+grandDone+'/'+grandTotal+' bài)</span>'
+    + '<button type="button" class="btn-danger" id="resetBtn">Xoá tiến độ đã học</button>'
+    + '</div>';
+  panel.innerHTML = html;
+
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(confirm("Xoá toàn bộ tiến độ đã học trên trình duyệt này? Hành động không thể hoàn tác.")){
+      try{ localStorage.removeItem("bandup.done"); }catch(e){}
+      renderAll();
+    }
+  });
+
+  /* Cầu thang hero: tô theo % tổng */
+  var stairs = document.querySelectorAll("#stairs .stair");
+  var filled = grandTotal ? Math.round(grandPct/100*stairs.length) : 0;
+  stairs.forEach(function(s, i){ s.classList.toggle("filled", i < filled); });
+  var cap = document.getElementById("stairsCap");
+  cap.textContent = grandTotal
+    ? "Bạn đã học "+grandPct+"% kiến thức hiện có trên web."
+    : "Bậc thang tô vàng theo % kiến thức bạn đã học.";
+}
+
+/* ═══════════ TỰ MỞ KHOÁ KHI FILE TỒN TẠI ═══════════ */
+function probePages(){
+  if(!/^https?:$/.test(location.protocol)) return; /* mở local file:// thì giữ nguyên trạng thái */
+  SITE_MAP.forEach(function(mod){
+    fetch(mod.file, {method:"HEAD", cache:"no-store"})
+      .then(function(r){
+        if(r.ok && mod.status !== "ready"){
+          mod.status = "ready";
+          renderCards();
+          syncGuideLinks();
+        }
+      })
+      .catch(function(){ /* giữ trạng thái coming */ });
+  });
+}
+function syncGuideLinks(){
+  var guide = SITE_MAP.filter(function(m){return m.key==="guide";})[0];
+  var ready = guide && guide.status === "ready";
+  document.querySelectorAll('[data-page="guide"]').forEach(function(a){
+    if(ready){ a.removeAttribute("aria-disabled"); a.removeAttribute("title"); }
+    else{
+      a.setAttribute("aria-disabled","true");
+      a.setAttribute("title","Trang đang được xây dựng");
+      a.addEventListener("click", function(ev){ if(a.getAttribute("aria-disabled")==="true") ev.preventDefault(); });
+    }
+  });
+}
+
+/* ═══════════ KHỞI ĐỘNG ═══════════ */
+function renderAll(){ renderCards(); renderProgress(); updateResume(); updateVocabCard(); updatePracticeCard(); updatePlacement(); }
+
+/* ══ Dải kết quả kiểm tra đầu vào ══ */
+function updatePlacement(){
+  var box = document.getElementById("placeBanner"), txt = document.getElementById("placeText");
+  if(!box || !txt) return;
+  var m = null;
+  try{ m = JSON.parse(localStorage.getItem("bandup.manifest.placement")); }catch(e){}
+  if(!m || !m.start){ box.style.display = "none"; return; }
+  var NAME = {f:"Nền tảng → 4.0", b1:"4.0 → 5.0", b2:"5.0 → 5.5", b3:"5.5 → 6.0", b4:"6.0 → 6.5", b5:"6.5 → 7.0"};
+  txt.innerHTML = "Bạn nên bắt đầu từ bậc <strong>" + (NAME[m.start] || m.start) + "</strong> "
+    + "(đúng " + m.correct + "/" + m.total + " câu). "
+    + '<a href="placement.html" style="font-weight:800">Xem lại kế hoạch →</a>';
+  box.style.display = "block";
+}
+
+/* ══ Thẻ Luyện Reading: đọc manifest do practice-reading.html ghi ══ */
+function updatePracticeCard(){
+  var el = document.getElementById("prMeta");
+  if(!el) return;
+  var m = null;
+  try{ m = JSON.parse(localStorage.getItem("bandup.manifest.practice-reading")); }catch(e){}
+  if(!m || !m.total){ el.textContent = "Mở danh sách bài →"; return; }
+  el.textContent = (m.done ? "Đã làm " + m.done + "/" + m.total + " bài" : m.total + " bài đang chờ") + " →";
+}
+
+/* ══ Thẻ Từ vựng: đọc bandup.manifest.vocab do vocab.html ghi ══ */
+function updateVocabCard(){
+  var el = document.getElementById("vocabMeta");
+  if(!el) return;
+  var m = null;
+  try{ m = JSON.parse(localStorage.getItem("bandup.manifest.vocab")); }catch(e){}
+  if(!m || !m.total){ el.textContent = "Mở kho cụm →"; return; }
+  var parts = [m.learned + "/" + m.total + " cụm đã học"];
+  if(m.due) parts.push(m.due + " cụm đến hạn ôn");
+  else if(m.master) parts.push(m.master + " cụm đã thuộc");
+  el.textContent = parts.join(" · ") + " →";
+}
+renderAll();
+syncGuideLinks();
+probePages();
+/* Cập nhật khi quay lại tab (người học vừa tick bài ở trang khác) */
+window.addEventListener("focus", renderAll);
+window.addEventListener("storage", renderAll);
+
+/* ══ UI v2: nút "Học tiếp" thông minh — nhảy đến bài dang dở đầu tiên ══ */
+function updateResume(){
+  var btn = document.getElementById("resumeBtn");
+  if(!btn) return;
+  var done = loadDone();
+  var order = ["foundation","reading","writing","speaking","listening"];
+  var files = {foundation:"foundation.html",reading:"reading.html",writing:"writing.html",speaking:"speaking.html",listening:"listening.html"};
+  for(var i=0;i<order.length;i++){
+    var m = loadManifest(order[i]);
+    if(!m || !m.lessons || !m.lessons.length) continue;
+    for(var j=0;j<m.lessons.length;j++){
+      var ls = m.lessons[j];
+      if(!done.has(ls.id)){
+        var t = ls.title.length > 36 ? ls.title.slice(0,33) + "…" : ls.title;
+        btn.href = files[order[i]] + "#" + ls.id;
+        btn.textContent = "Học tiếp: " + t;
+        btn.removeAttribute("data-page");
+        btn.removeAttribute("aria-disabled");
+        btn.removeAttribute("title");
+        return;
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>
