@@ -1060,8 +1060,8 @@ svg { flex: none; }
      Gọi thẳng REST API của Supabase bằng fetch, không nạp thư viện.
      Muốn khỏi nhập lại trên từng máy, điền sẵn 2 dòng dưới đây rồi upload file.
      Khoá anon được thiết kế để lộ công khai — dữ liệu được bảo vệ bằng RLS. */
-  var SUPABASE_URL = "";
-  var SUPABASE_KEY = "";
+  var SUPABASE_URL = "https://ryqqestvrbuxjyaewwpw.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_wAbx1FVWMiIbq4QRTpSccA_O6cPwn8K";
 
   var CKEY = "acct-rental-cloud-v1";
   var CFG = { url: SUPABASE_URL, key: SUPABASE_KEY, token: "", refresh: "", uid: "", email: "" };
@@ -1072,7 +1072,7 @@ svg { flex: none; }
       var raw = canStore ? localStorage.getItem(CKEY) : null;
       if (!raw) return;
       var d = JSON.parse(raw);
-      CFG.url = d.url || SUPABASE_URL; CFG.key = d.key || SUPABASE_KEY;
+      CFG.url = SUPABASE_URL || d.url || ""; CFG.key = SUPABASE_KEY || d.key || "";
       CFG.token = d.token || ""; CFG.refresh = d.refresh || "";
       CFG.uid = d.uid || ""; CFG.email = d.email || "";
     } catch (e) {}
@@ -1206,13 +1206,17 @@ svg { flex: none; }
         '<div class="rule"></div>' +
         '<button class="btn danger" data-act="signout">' + ic("power") + " Đăng xuất</button>";
     } else {
-      body += '<div class="sec first">1 · Kết nối dự án</div>' +
-        '<label class="fl" for="cUrl">URL dự án Supabase</label>' +
-        '<input class="in" id="cUrl" value="' + esc(CFG.url) + '" placeholder="https://xxxx.supabase.co" autocapitalize="off" spellcheck="false">' +
-        '<label class="fl" for="cKey">Khoá anon public</label>' +
-        '<input class="in" id="cKey" value="' + esc(CFG.key) + '" placeholder="eyJhbGciOi…" autocapitalize="off" spellcheck="false">' +
-        '<p class="hint">Lấy ở Supabase → Project Settings → API. Nhập một lần trên mỗi thiết bị.</p>' +
-        '<div class="sec">2 · Tài khoản của anh</div>' +
+      var baked = !!(SUPABASE_URL && SUPABASE_KEY);
+      body += (baked
+        ? '<div class="acct">' + ic("check") + "<span>Đã kết nối sẵn dự án<br><b>" +
+          esc(CFG.url.replace(/^https?:\/\//, "")) + "</b></span></div>"
+        : '<div class="sec first">1 · Kết nối dự án</div>' +
+          '<label class="fl" for="cUrl">URL dự án Supabase</label>' +
+          '<input class="in" id="cUrl" value="' + esc(CFG.url) + '" placeholder="https://xxxx.supabase.co" autocapitalize="off" spellcheck="false">' +
+          '<label class="fl" for="cKey">Khoá anon public</label>' +
+          '<input class="in" id="cKey" value="' + esc(CFG.key) + '" placeholder="sb_publishable_…" autocapitalize="off" spellcheck="false">' +
+          '<p class="hint">Lấy ở Supabase → Project Settings → API Keys.</p>') +
+        '<div class="sec' + (baked ? " first" : "") + '">Tài khoản của anh</div>' +
         '<label class="fl" for="cMail">Email</label>' +
         '<input class="in" id="cMail" type="email" value="' + esc(CFG.email) + '" autocapitalize="off" spellcheck="false">' +
         '<label class="fl" for="cPass">Mật khẩu</label>' +
@@ -1229,7 +1233,7 @@ svg { flex: none; }
 
   function doAuth(mode) {
     var g = function (id) { return (document.getElementById(id) || {}).value || ""; };
-    CFG.url = g("cUrl").trim(); CFG.key = g("cKey").trim();
+    if (document.getElementById("cUrl")) { CFG.url = g("cUrl").trim(); CFG.key = g("cKey").trim(); }
     var mail = g("cMail").trim(), pass = g("cPass");
     if (!CFG.url || !CFG.key) { toast("Nhập URL dự án và khoá anon trước"); return; }
     if (!mail || pass.length < 6) { toast("Email và mật khẩu tối thiểu 6 ký tự"); return; }
