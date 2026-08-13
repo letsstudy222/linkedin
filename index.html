@@ -709,10 +709,33 @@ svg { flex: none; }
     }
     if (!a.payAnchorDay) a.payAnchorDay = fromISO(a.payAnchor).getDate();
     if (typeof a.seq !== "number") a.seq = 0;
-    if (!a.blockPolicy) a.blockPolicy = "both";
+    repairShifts(a);
+    a.blockPolicy = "both";   /* chốt một thoả thuận duy nhất, không còn tuỳ chọn */
     if (!Array.isArray(a.log)) a.log = [];
     if (typeof a.paidWeeks !== "number") a.paidWeeks = 0;
     if (!a.anchorDay) a.anchorDay = fromISO(a.anchor || a.rentDate || todayISO()).getDate();
+    return a;
+  }
+
+  /* Sửa lỗi cũ: block đã đóng nhưng chưa dời lịch (do bản trước còn tuỳ chọn thoả thuận).
+     Chạy một lần cho mỗi tài khoản, có cờ đánh dấu để không dời chồng. */
+  var fixReport = [];
+  function repairShifts(a) {
+    if (a.fixShift) return a;
+    a.fixShift = 1;
+    var mv = 0;
+    (a.blocks || []).forEach(function (b) {
+      if (!b.to) return;
+      var dd = diffDays(b.from, b.to);
+      if (dd <= 0) return;
+      if (!num(b.shiftA)) { a.anchor = addDays(a.anchor, dd); b.shiftA = dd; mv += dd; }
+      if (!num(b.shiftP)) { a.payAnchor = addDays(a.payAnchor, dd); b.shiftP = dd; }
+    });
+    if (mv) {
+      a.anchorDay = fromISO(a.anchor).getDate();
+      a.payAnchorDay = fromISO(a.payAnchor).getDate();
+      fixReport.push(a.name + " +" + mv + " ngày");
+    }
     return a;
   }
 
@@ -794,7 +817,6 @@ svg { flex: none; }
     var shortUSD = tExp - tGot;
 
     /* ---- block ---- */
-    var pol = a.blockPolicy || "both";
     var blocks = a.blocks || [], cur = null, totalDays = 0;
     for (var i = 0; i < blocks.length; i++) {
       if (!blocks[i].to) cur = blocks[i];
@@ -817,11 +839,11 @@ svg { flex: none; }
 
     /* lãi thực tế: thu luôn giảm theo uptime; chi chỉ giảm nếu thoả thuận dừng cả hai */
     var effIn = inVND * uptime;
-    var effOut = pol === "both" ? outVND * uptime : outVND;
+    var effOut = outVND * uptime;
     var realProfit = effIn - effOut;
 
-    /* đang block + thoả thuận dừng cả hai => chưa phát sinh nghĩa vụ trả */
-    var dueActive = !(cur && pol === "both");
+    /* đang block => tạm dừng cả nghĩa vụ trả lẫn kỳ nhận */
+    var dueActive = !cur;
 
     var st = "ok";
     if (a.active === false) st = "off";
@@ -836,7 +858,7 @@ svg { flex: none; }
       per: per, gc: gc, payDues: payDues, pLeft: pLeft, recvActive: !cur,
       cycGot: cycGot, cycExpect: cycExpect, cycLeft: cycExpect - cycGot, evenUSD: evenUSD,
       fill: fill, shortUSD: shortUSD, closedCyc: closedCyc, gotAllUSD: allGot,
-      pol: pol, cur: cur, curDays: curDays, blockCount: blocks.length, blockDaysTotal: totalDays,
+      cur: cur, curDays: curDays, blockCount: blocks.length, blockDaysTotal: totalDays,
       uptime: uptime, span: span, realProfit: realProfit, dueActive: dueActive };
   }
 
@@ -941,21 +963,18 @@ svg { flex: none; }
     if (!cur) return;
     if (to < cur.from) { toast("Ngày mở phải sau ngày bị block"); return; }
     var days = diffDays(cur.from, to);
-    var pol = a.blockPolicy || "both";
     cur.to = to; cur.days = days; cur.shiftA = 0; cur.shiftP = 0;
     if (days > 0) {
-      if (pol === "both") {
-        a.anchor = addDays(a.anchor, days);
-        a.anchorDay = fromISO(a.anchor).getDate();
-        cur.shiftA = days;
-      }
+      a.anchor = addDays(a.anchor, days);
+      a.anchorDay = fromISO(a.anchor).getDate();
+      cur.shiftA = days;
       a.payAnchor = addDays(a.payAnchor, days);
       a.payAnchorDay = fromISO(a.payAnchor).getDate();
       cur.shiftP = days;
     }
     audit("Mở block", a.name, days + " ngày chết · mốc trả " + dmy(a.anchor) + " · mốc nhận " + dmy(a.payAnchor));
     save(); closeModal(); render();
-    toast(a.name + ": mở lại sau " + days + " ngày" + (cur.shiftA ? " · mốc trả dời sang " + dmy(a.anchor) : ""));
+    toast(a.name + ": mở lại sau " + days + " ngày · mốc trả " + dmy(a.anchor) + " · mốc nhận " + dmy(a.payAnchor));
   }
 
   /* xoá một lần block: hoàn lại đúng số ngày đã dời */
@@ -1825,12 +1844,7 @@ svg { flex: none; }
   /* ---------------- block ---------------- */
   function blockDlg(id) {
     var a = byId(id); if (!a) return;
-    var pol = a.blockPolicy || "both";
-    var effect = pol === "both"
-      ? "Lịch trả tạm dừng ngay. Khi mở lại, mốc thanh toán và ngày nhận tiền cùng dời đúng số ngày chết."
-      : pol === "payout"
-        ? "Vẫn phải trả đủ trong thời gian block. Chỉ ngày nhận tiền được dời khi mở lại."
-        : "Chỉ ghi nhận để thống kê. Không dời mốc nào.";
+    var effect = "Lịch trả và kỳ nhận tạm dừng ngay. Khi mở lại, cả hai mốc cùng dời đúng số ngày chết.";
     sheet("Ghi block · " + esc(a.name),
       '<label class="fl" for="bFrom">Ngày bị block</label>' +
       '<input class="in" id="bFrom" type="date" value="' + todayISO() + '" max="' + todayISO() + '">' +
@@ -1838,7 +1852,7 @@ svg { flex: none; }
       '<label class="fl" for="bWhy">Lý do</label>' +
       '<input class="in" id="bWhy" placeholder="VD: đổi IP, xác minh danh tính, vi phạm chính sách…">' +
       '<p class="hint">Ghi cụ thể — sau vài lần sẽ thấy acc nào block vì cùng một nguyên nhân lặp lại.</p>' +
-      '<div class="bar">' + ic("alert") + "<span><b>Thoả thuận hiện tại:</b> " + POL[pol] + ". " + effect + "</span></div>",
+      '<div class="bar">' + ic("alert") + "<span>" + effect + "</span></div>",
       '<button class="btn" data-act="close">Huỷ</button>' +
       '<button class="btn primary" data-act="blockOk" data-id="' + id + '">Ghi nhận block</button>');
   }
@@ -1855,7 +1869,6 @@ svg { flex: none; }
       '<button class="btn" data-act="close">Huỷ</button>' +
       '<button class="btn primary" data-act="unblockOk" data-id="' + id + '">Xác nhận mở</button>');
 
-    var pol = a.blockPolicy || "both";
     function prev() {
       var to = document.getElementById("uTo").value || todayISO();
       var days = diffDays(d.cur.from, to);
@@ -1902,7 +1915,9 @@ svg { flex: none; }
       });
       body += "</div>";
     }
-    body += '<p class="hint" style="margin-top:14px">Xoá một lần block sẽ hoàn lại đúng số ngày đã dời lịch.</p>';
+    body += '<p class="hint" style="margin-top:14px">Xoá một lần block sẽ hoàn lại đúng số ngày đã dời lịch. ' +
+      'Dòng nào ghi <b>không dời lịch</b> mà số ngày lớn hơn 0 là bất thường — bấm nút dưới để dời bù.</p>' +
+      '<button class="btn" data-act="refix" data-id="' + a.id + '">' + ic("rotate") + " Dời bù lịch cho các block chưa tính</button>";
     sheet("Lịch sử block · " + esc(a.name), body, '<button class="btn" data-act="close">Đóng</button>');
   }
 
@@ -2171,6 +2186,15 @@ svg { flex: none; }
       unblock(id, ut);
     }
     else if (act === "dropBlock") dropBlock(id, b.getAttribute("data-b"));
+    else if (act === "refix") {
+      var ax = byId(id); if (!ax) return;
+      ax.fixShift = 0; fixReport = [];
+      repairShifts(ax);
+      if (fixReport.length) { audit("Dời bù lịch", ax.name, fixReport.join(" · ")); save(); render();
+        toast("Đã dời bù: mốc trả " + dmy(ax.anchor) + " · mốc nhận " + dmy(ax.payAnchor)); }
+      else toast("Mọi lần block của tài khoản này đã được tính đủ");
+      blockHistory(id);
+    }
     else if (act === "del") {
       var acc = byId(id);
       sheet("Xoá tài khoản",
@@ -2242,8 +2266,14 @@ svg { flex: none; }
 
   /* ---------------- khởi động ---------------- */
   paintIcons(document);
-  load();
   cfgLoad();
+  load();
+  if (fixReport.length) {
+    audit("Sửa lịch tự động", "", fixReport.join(" · "));
+    save();
+    warn("Đã dời lại lịch cho " + fixReport.length + " tài khoản có block chưa được tính: " +
+      fixReport.join(", ") + ". Xem tab Nhật ký để đối chiếu.");
+  }
   if (!canStore) warn("Trình duyệt đang chặn lưu trữ (chế độ ẩn danh?). Dữ liệu sẽ mất khi đóng tab.");
   render();
   setSync(CFG.token ? "busy" : "off", CFG.token ? "Đang tải…" : "Chưa đồng bộ");
