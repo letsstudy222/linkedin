@@ -2475,15 +2475,118 @@ svg { flex: none; }
     return R;
   }
 
+  /* ---- Sheet tiếng Việt: bản nội bộ ĐẦY ĐỦ, có chi phí, thanh toán, lãi ---- */
+  function stmtVi(a) {
+    var L = DICT.vi, d = derive(a), today = todayISO(), R = [];
+    var D = function (x) { return dmy(x); };
+    var H = function (v) { return { v: v, s: 2 }; };
+    var C = function (v) { return { v: v, s: 3 }; };
+    var T = function (v) { return { v: v, s: 4 }; };
+
+    R.push([T(L.title)]);
+    R.push([{ v: L.gen, s: 1 }, stampNow("vi")]);
+    R.push([]);
+
+    R.push([H(L.info), C("")]);
+    R.push([H(L.seqL), C(num(a.seq))]);
+    R.push([H(L.nm), C(a.name)]);
+    R.push([H(L.rent), C(D(a.rentDate))]);
+    R.push([H(L.dayr), C(diffDays(a.rentDate, today))]);
+    R.push([H(L.conn), C(num(a.connections))]);
+    R.push([H(L.inc), C(num(a.monthlyIncomeUSD))]);
+    R.push([H(L.cyc), C(d.cd + " " + L.days + " × " + d.per)]);
+    R.push([H(L.cost), C(num(a.monthlyCostVND))]);
+    R.push([H(L.wk), C(Math.round(d.weekly))]);
+    R.push([H(L.fx), C(S.rate)]);
+    R.push([]);
+
+    R.push([H(L.stat), C("")]);
+    R.push([H(L.nblk), C(d.blockCount)]);
+    R.push([H(L.ddays), C(d.blockDaysTotal)]);
+    R.push([H(L.up + " (" + d.span + " " + L.days + ")"), C(Math.round(d.uptime * 100) + "%")]);
+    R.push([H(L.curb), C(d.cur ? fmt(L.yes, { d: D(d.cur.from) }) : L.no)]);
+    R.push([H(L.ccyc), C(d.closedCyc)]);
+    R.push([H(L.fill), C(Math.round(d.fill * 100) + "%")]);
+    R.push([H(L.short), C(Math.round(d.shortUSD * 100) / 100)]);
+    R.push([H(L.anc), C(D(a.anchor))]);
+    R.push([H(L.ancE), C(D(d.anc))]);
+    R.push([H(L.panc), C(D(a.payAnchor))]);
+    R.push([H(L.pancE), C(D(d.panc))]);
+    R.push([]);
+
+    R.push([T(L.bh)]);
+    R.push(L.bhh.map(H));
+    if (!(a.blocks || []).length) R.push([C(L.nob), C(""), C(""), C(""), C(""), C("")]);
+    else a.blocks.forEach(function (b, i) {
+      var dd = blockDays(b, today);
+      R.push([C(i + 1), C(D(b.from)), C(b.to ? D(b.to) : L.nores),
+        C(dd), C(b.to ? dd : L.paused), C(b.reason || "")]);
+    });
+    R.push([H(L.btot), C(d.shift)]);
+    R.push([]);
+
+    var chk = function (r) {
+      if (r.gap === "") return L.first;
+      if (r.gap === r.expect) return L.ok;
+      return r.gap > r.expect ? fmt(L.longer, { n: r.gap - r.expect })
+        : fmt(L.shorter, { n: r.expect - r.gap });
+    };
+    var out = seriesRows(a, "out"), inn = seriesRows(a, "in");
+
+    R.push([T(L.pay)]);
+    R.push(L.th.map(H));
+    var sOut = 0;
+    if (!out.length) R.push([C(L.nopay)]);
+    out.forEach(function (r) {
+      sOut += num(r.vnd);
+      R.push([C(D(r.on)), C(fmt(L.wkl, { a: r.idx })), C(D(r.due)), C(r.gap), C(r.bd),
+        C(r.expect), C(chk(r)), C(""), C(num(r.vnd))]);
+    });
+    R.push([]);
+
+    R.push([T(fmt(L.rcv, { n: d.cd }))]);
+    R.push(L.th.map(H));
+    var sIn = 0, uIn = 0;
+    if (!inn.length) R.push([C(L.norcv)]);
+    inn.forEach(function (r) {
+      sIn += num(r.vnd); uIn += num(r.usd);
+      R.push([C(D(r.on)), C(fmt(L.rcl, { a: r.idx })), C(D(r.due)), C(r.gap), C(r.bd),
+        C(r.expect), C(chk(r)), C(num(r.usd)), C(num(r.vnd))]);
+    });
+    R.push([]);
+
+    R.push([T(L.up2)]);
+    R.push(L.uph.map(H));
+    var lf = function (n) {
+      return n < 0 ? fmt(L.late, { n: -n }) : n === 0 ? L.today : fmt(L.inn, { n: n });
+    };
+    upcoming(a, "out", 4).forEach(function (r) {
+      R.push([C(L.due), C(fmt(L.cycl, { a: r.i }) + (r.cyc ? fmt(L.nxt, { n: r.cyc }) : "")),
+        C(D(r.d)), C(lf(r.left)), C(""), C(num(r.vnd))]);
+    });
+    upcoming(a, "in", 4).forEach(function (r) {
+      R.push([C(L.exp), C(fmt(L.rcyc, { a: r.i, b: r.of }) + (r.cyc ? fmt(L.nxt, { n: r.cyc }) : "")),
+        C(D(r.d)), C(lf(r.left)), C(num(r.usd)), C(num(r.vnd))]);
+    });
+    if (d.cur) R.push([{ v: L.note + ": " + fmt(L.noteB, { d: D(d.cur.from) }), s: 1 }]);
+    R.push([]);
+
+    R.push([T(L.sum)]);
+    R.push([H(L.tIn), C(Math.round(uIn * 100) / 100)]);
+    R.push([H(L.tInV), C(sIn)]);
+    R.push([H(L.tOut), C(sOut)]);
+    R.push([H(L.net), C(sIn - sOut)]);
+    return R;
+  }
+
   function exportCSVAcc(id) {
     var a = byId(id); if (!a) return;
-    var W = [34, 26, 24, 26, 24, 16];
     var blob = xlsxBlob([
-      { name: DICT.vi.sheet, rows: stmtRows(a, "vi"), widths: W },
-      { name: DICT.en.sheet, rows: stmtRows(a, "en"), widths: W }
+      { name: DICT.vi.sheet, rows: stmtVi(a), widths: [28, 30, 18, 20, 20, 20, 18, 12, 16] },
+      { name: DICT.en.sheet, rows: stmtRows(a, "en"), widths: [34, 26, 24, 26, 24, 16] }
     ]);
     downloadBlob("sao-ke-" + a.name.replace(/[^a-zA-Z0-9-_]/g, "_") + "-" + todayISO() + ".xlsx", blob);
-    audit("Xuất sao kê", a.name, "Excel song ngữ, bản gửi đối tác");
+    audit("Xuất sao kê", a.name, "Excel: sheet Việt đầy đủ + sheet Anh gửi đối tác");
     save();
   }
 
