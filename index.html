@@ -2127,11 +2127,14 @@ svg { flex: none; }
     x += "<sheetData>";
     rows.forEach(function (r, ri) {
       x += '<row r="' + (ri + 1) + '">';
-      r.forEach(function (v, ci) {
-        if (v === "" || v === null || v === undefined) return;
-        var ref = COL[ci] + (ri + 1);
-        if (typeof v === "number" && isFinite(v)) x += '<c r="' + ref + '"><v>' + v + "</v></c>";
-        else x += '<c r="' + ref + '" t="inlineStr"><is><t xml:space="preserve">' + xmlE(v) + "</t></is></c>";
+      r.forEach(function (cell, ci) {
+        var v = cell, st = 0;
+        if (cell && typeof cell === "object") { v = cell.v; st = cell.s || 0; }
+        if ((v === "" || v === null || v === undefined) && !st) return;
+        var ref = COL[ci] + (ri + 1), sa = st ? ' s="' + st + '"' : "";
+        if (typeof v === "number" && isFinite(v)) x += '<c r="' + ref + '"' + sa + "><v>" + v + "</v></c>";
+        else if (v === "" || v === null || v === undefined) x += '<c r="' + ref + '"' + sa + "/>";
+        else x += '<c r="' + ref + '"' + sa + ' t="inlineStr"><is><t xml:space="preserve">' + xmlE(v) + "</t></is></c>";
       });
       x += "</row>";
     });
@@ -2150,7 +2153,9 @@ svg { flex: none; }
       sheets.map(function (s, i) {
         return '<Override PartName="/xl/worksheets/sheet' + (i + 1) +
           '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
-      }).join("") + "</Types>" });
+      }).join("") +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      "</Types>" });
     files.push({ name: "_rels/.rels", data:
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
@@ -2168,12 +2173,42 @@ svg { flex: none; }
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       sheets.map(function (s, i) {
         return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
-      }).join("") + "</Relationships>" });
+      }).join("") +
+      '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      "</Relationships>" });
+    files.push({ name: "xl/styles.xml", data: STYLES });
     sheets.forEach(function (s, i) {
       files.push({ name: "xl/worksheets/sheet" + (i + 1) + ".xml", data: sheetXML(s.rows, s.widths) });
     });
     return zipStore(files);
   }
+
+  /* 0 thường · 1 in đậm · 2 tiêu đề bảng (đậm, nền vàng, viền) · 3 ô dữ liệu (viền) · 4 tiêu đề mục lớn */
+  var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<fonts count="3">' +
+    '<font><sz val="11"/><color theme="1"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="11"/><color theme="1"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="12"/><color theme="1"/><name val="Calibri"/></font>' +
+    "</fonts>" +
+    '<fills count="3">' +
+    '<fill><patternFill patternType="none"/></fill>' +
+    '<fill><patternFill patternType="gray125"/></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/><bgColor indexed="64"/></patternFill></fill>' +
+    "</fills>" +
+    '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
+    '<border><left style="thin"><color indexed="64"/></left><right style="thin"><color indexed="64"/></right>' +
+    '<top style="thin"><color indexed="64"/></top><bottom style="thin"><color indexed="64"/></bottom><diagonal/></border></borders>' +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="5">' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+    '<alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1">' +
+    '<alignment horizontal="center" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    "</cellXfs></styleSheet>";
 
   function downloadBlob(name, blob) {
     var url = URL.createObjectURL(blob), a = document.createElement("a");
@@ -2317,6 +2352,9 @@ svg { flex: none; }
       rcv: "CHI TIẾT NHẬN TIỀN — CHUẨN {n} NGÀY / LẦN",
       th: ["Ngày ghi nhận", "Nội dung", "Hạn theo lịch", "Cách hạn trước (ngày)",
         "Trong đó block (ngày)", "Chuẩn phải là (ngày)", "Đối chiếu", "USD", "VND"],
+      thD: "Nội dung", thDue: "Hạn theo lịch", thGap: "Cách lần trước (ngày)",
+      thBlk: "Trong đó ngày chết", thExp: "Chuẩn phải là (ngày)",
+      uType: "Loại", uPeriod: "Kỳ", uDate: "Ngày dự tính", uStatus: "Tình trạng",
       nopay: "Chưa có khoản thanh toán nào", norcv: "Chưa ghi nhận lần nhận tiền nào",
       up2: "LỊCH DỰ TÍNH SẮP TỚI",
       uph: ["Loại", "Kỳ", "Ngày dự tính", "Tình trạng", "USD", "VND"],
@@ -2346,6 +2384,9 @@ svg { flex: none; }
       rcv: "PAYOUTS RECEIVED — STANDARD INTERVAL {n} DAYS",
       th: ["Recorded on", "Description", "Scheduled due", "Gap from previous (days)",
         "Of which downtime (days)", "Expected gap (days)", "Check", "USD", "VND"],
+      thD: "Description", thDue: "Scheduled due", thGap: "Gap from previous (days)",
+      thBlk: "Of which downtime (days)", thExp: "Expected gap (days)",
+      uType: "Type", uPeriod: "Period", uDate: "Scheduled date", uStatus: "Status",
       nopay: "No payments recorded", norcv: "No payouts recorded",
       up2: "UPCOMING SCHEDULE",
       uph: ["Type", "Period", "Scheduled date", "Status", "USD", "VND"],
@@ -2370,107 +2411,79 @@ svg { flex: none; }
   /* ngày: bản Việt dd/mm/yyyy, bản Anh yyyy-mm-dd cho khỏi nhầm */
   function dfmt(iso, lang) { return lang === "en" ? iso : dmy(iso); }
 
-  /* ---- dựng nội dung sao kê cho một ngôn ngữ ---- */
+  /* ---- Sao kê gửi đối tác: chỉ lịch nhận tiền và block.
+         Cố ý KHÔNG có chi phí, VND, lợi nhuận — an toàn để gửi ra ngoài. ---- */
   function stmtRows(a, lang) {
     var L = DICT[lang], d = derive(a), today = todayISO(), R = [];
     var D = function (x) { return dfmt(x, lang); };
-    var push = function () { R.push([].slice.call(arguments)); };
-    var blank = function () { R.push([]); };
+    var H = function (v) { return { v: v, s: 2 }; };   // tiêu đề bảng
+    var C = function (v) { return { v: v, s: 3 }; };   // ô dữ liệu
+    var T = function (v) { return { v: v, s: 4 }; };   // tiêu đề mục
 
-    push(L.title);
-    push(L.gen, stampNow(lang));
-    blank();
+    R.push([T(L.title)]);
+    R.push([{ v: L.gen, s: 1 }, stampNow(lang)]);
+    R.push([]);
 
-    push(L.info);
-    push(L.seqL, num(a.seq)); push(L.nm, a.name); push(L.rent, D(a.rentDate));
-    push(L.dayr, diffDays(a.rentDate, today)); push(L.conn, num(a.connections));
-    push(L.inc, num(a.monthlyIncomeUSD));
-    push(L.cyc, d.cd + " " + L.days + " × " + d.per);
-    push(L.cost, num(a.monthlyCostVND)); push(L.wk, Math.round(d.weekly)); push(L.fx, S.rate);
-    blank();
+    /* --- ACCOUNT DETAILS --- */
+    R.push([H(L.info), C("")]);
+    R.push([H(L.nm), C(a.name)]);
+    R.push([H(L.rent), C(D(a.rentDate))]);
+    R.push([H(L.dayr), C(diffDays(a.rentDate, today))]);
+    R.push([H(L.conn), C(num(a.connections))]);
+    R.push([H(L.inc), C(num(a.monthlyIncomeUSD))]);
+    R.push([H(L.cyc), C(d.cd + " " + L.days + " × " + d.per)]);
+    R.push([]);
 
-    push(L.stat);
-    push(L.nblk, d.blockCount); push(L.ddays, d.blockDaysTotal);
-    push(L.up + " (" + d.span + " " + L.days + ")", Math.round(d.uptime * 100) + "%");
-    push(L.curb, d.cur ? fmt(L.yes, { d: D(d.cur.from) }) : L.no);
-    push(L.ccyc, d.closedCyc); push(L.fill, Math.round(d.fill * 100) + "%");
-    push(L.short, Math.round(d.shortUSD * 100) / 100);
-    push(L.anc, D(a.anchor)); push(L.ancE, D(d.anc));
-    push(L.panc, D(a.payAnchor)); push(L.pancE, D(d.panc));
-    blank();
-
-    push(L.bh);
-    if (!(a.blocks || []).length) push(L.nob);
-    else {
-      R.push(L.bhh.slice());
+    /* --- BLOCK HISTORY --- */
+    R.push([T(L.bh)]);
+    R.push(L.bhh.map(H));
+    if (!(a.blocks || []).length) {
+      R.push([C(L.nob), C(""), C(""), C(""), C(""), C("")]);
+    } else {
       a.blocks.forEach(function (b, i) {
         var dd = blockDays(b, today);
-        push(i + 1, D(b.from), b.to ? D(b.to) : L.nores, dd, b.to ? dd : L.paused, b.reason || "");
+        R.push([C(i + 1), C(D(b.from)), C(b.to ? D(b.to) : L.nores),
+          C(dd), C(b.to ? dd : L.paused), C(b.reason || "")]);
       });
-      push(L.btot, d.shift);
     }
-    blank();
+    R.push([H(L.btot), C(d.shift)]);
+    R.push([]);
 
-    var chk = function (r) {
-      if (r.gap === "") return L.first;
-      if (r.gap === r.expect) return L.ok;
-      return r.gap > r.expect ? fmt(L.longer, { n: r.gap - r.expect }) : fmt(L.shorter, { n: r.expect - r.gap });
-    };
-
-    push(L.pay);
-    var out = seriesRows(a, "out"), inn = seriesRows(a, "in");
-    R.push(L.th.slice());
-    var sOut = 0;
-    out.forEach(function (r) {
-      sOut += num(r.vnd);
-      push(D(r.on), fmt(L.wkl, { a: r.idx }),
-        D(r.due), r.gap, r.bd, r.expect, chk(r), "", num(r.vnd));
-    });
-    if (!out.length) push(L.nopay);
-    blank();
-
-    push(fmt(L.rcv, { n: d.cd }));
-    R.push(L.th.slice());
-    var sIn = 0, uIn = 0;
+    /* --- PAYOUTS RECEIVED --- */
+    R.push([T(fmt(L.rcv, { n: d.cd }))]);
+    R.push([L.thD, L.thDue, L.thGap, L.thBlk, L.thExp, "USD"].map(H));
+    var inn = seriesRows(a, "in"), uIn = 0;
+    if (!inn.length) R.push([C(L.norcv), C(""), C(""), C(""), C(""), C("")]);
     inn.forEach(function (r) {
-      sIn += num(r.vnd); uIn += num(r.usd);
-      push(D(r.on), fmt(L.rcl, { a: r.idx }),
-        D(r.due), r.gap, r.bd, r.expect, chk(r), num(r.usd), num(r.vnd));
+      uIn += num(r.usd);
+      R.push([C(fmt(L.rcl, { a: r.idx })), C(D(r.due)), C(r.gap), C(r.bd), C(r.expect), C(num(r.usd))]);
     });
-    if (!inn.length) push(L.norcv);
-    blank();
+    R.push([H(L.tIn), C(Math.round(uIn * 100) / 100)]);
+    R.push([]);
 
-    push(L.up2);
-    R.push(L.uph.slice());
+    /* --- UPCOMING SCHEDULE --- */
+    R.push([T(L.up2)]);
+    R.push([L.uType, L.uPeriod, L.uDate, L.uStatus, "USD"].map(H));
     var lf = function (n) {
       return n < 0 ? fmt(L.late, { n: -n }) : n === 0 ? L.today : fmt(L.inn, { n: n });
     };
-    upcoming(a, "out", 4).forEach(function (r) {
-      push(L.due, fmt(L.cycl, { a: r.i }) + (r.cyc ? fmt(L.nxt, { n: r.cyc }) : ""),
-        D(r.d), lf(r.left), "", num(r.vnd));
-    });
     upcoming(a, "in", 4).forEach(function (r) {
-      push(L.exp, fmt(L.rcyc, { a: r.i, b: r.of }) + (r.cyc ? fmt(L.nxt, { n: r.cyc }) : ""),
-        D(r.d), lf(r.left), num(r.usd), num(r.vnd));
+      R.push([C(L.exp), C(fmt(L.rcyc, { a: r.i, b: r.of }) + (r.cyc ? fmt(L.nxt, { n: r.cyc }) : "")),
+        C(D(r.d)), C(lf(r.left)), C(num(r.usd))]);
     });
-    if (d.cur) push(L.note, fmt(L.noteB, { d: D(d.cur.from) }));
-    blank();
-
-    push(L.sum);
-    push(L.tIn, Math.round(uIn * 100) / 100); push(L.tInV, sIn);
-    push(L.tOut, sOut); push(L.net, sIn - sOut);
+    if (d.cur) R.push([{ v: L.note + ": " + fmt(L.noteB, { d: D(d.cur.from) }), s: 1 }]);
     return R;
   }
 
   function exportCSVAcc(id) {
     var a = byId(id); if (!a) return;
-    var W = [26, 30, 16, 16, 16, 16, 18, 12, 16];
+    var W = [34, 26, 24, 26, 24, 16];
     var blob = xlsxBlob([
       { name: DICT.vi.sheet, rows: stmtRows(a, "vi"), widths: W },
       { name: DICT.en.sheet, rows: stmtRows(a, "en"), widths: W }
     ]);
     downloadBlob("sao-ke-" + a.name.replace(/[^a-zA-Z0-9-_]/g, "_") + "-" + todayISO() + ".xlsx", blob);
-    audit("Xuất sao kê", a.name, "Excel song ngữ");
+    audit("Xuất sao kê", a.name, "Excel song ngữ, bản gửi đối tác");
     save();
   }
 
