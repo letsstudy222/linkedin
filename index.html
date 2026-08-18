@@ -1131,7 +1131,9 @@ svg { flex: none; }
     if (d.cur) {
       barHTML = '<div class="bar">' + ic("power") + "<span>Bị block từ <b>" + dmy(d.cur.from) + "</b> — " +
         (d.curDays === 0 ? "từ hôm nay" : "<b>" + d.curDays + "</b> ngày") +
-        ". Lịch trả và ngày nhận tiền đang tạm dừng.</span></div>";
+        ". Lịch trả và ngày nhận tiền đang tạm dừng.<br>" +
+        "<b>Mọi ngày bên dưới sẽ tự lùi thêm 1 ngày mỗi ngày</b> cho tới khi bấm " +
+        "<b>Đã mở lại tài khoản</b>. Bấm nút đó để chốt lịch đứng yên.</span></div>";
     }
 
     var upPct = Math.round(d.uptime * 100);
@@ -1787,6 +1789,9 @@ svg { flex: none; }
       perPayoutManual: false, connections: "", monthlyCostVND: "", anchor: t, payAnchor: t,
       note: "", active: true, seq: 0 };
     var cd = num(f.payoutCycleDays) || 15;
+    /* Mặc định: ngày thuê = mốc trả tuần 1 = mốc nhận lần 1.
+       Chỉ tách ra khi sổ cũ đã lệch, hoặc khi người dùng bấm nút tách. */
+    var sameD = !a || ((f.anchor || f.rentDate) === f.rentDate && (f.payAnchor || f.rentDate) === f.rentDate);
 
     var body =
       '<div class="sec first">Thông tin thuê</div>' +
@@ -1800,6 +1805,9 @@ svg { flex: none; }
       '<input class="in" id="fRent" type="date" value="' + esc(f.rentDate) + '"></div>' +
       '<div><label class="fl" for="fConn">Số kết nối</label>' +
       '<input class="in mono" id="fConn" type="number" inputmode="numeric" value="' + esc(f.connections) + '" placeholder="0"></div></div>' +
+      '<p class="hint" id="hRent"></p>' +
+      '<button class="link' + (sameD ? "" : " hide") + '" id="splitD" type="button">' +
+      "Ngày trả hoặc ngày nhận đầu tiên khác ngày thuê? Bấm để đặt riêng</button>" +
 
       '<div class="sec">Tiền nhận về</div>' +
       '<label class="fl" for="fInc">Số tiền nhận hàng tháng (USD)</label>' +
@@ -1817,16 +1825,20 @@ svg { flex: none; }
       (f.perPayoutManual ? esc(f.perPayoutUSD) : "") + '" placeholder="0">' +
       '<p class="hint" id="hPer"></p>' +
 
+      '<div id="wPAnchor"' + (sameD ? ' class="hide"' : "") + ">" +
       '<label class="fl" for="fPAnchor">Ngày nhận lần 1 (mốc chu kỳ nhận)</label>' +
       '<input class="in" id="fPAnchor" type="date" value="' + esc(f.payAnchor || f.rentDate || t) + '">' +
+      "</div>" +
       '<p class="hint" id="hPAnchor"></p>' +
 
       '<div class="sec">Tiền phải trả</div>' +
       '<label class="fl" for="fCost">Số tiền phải thanh toán / tháng (VND)</label>' +
       '<input class="in mono" id="fCost" type="number" inputmode="numeric" value="' + esc(f.monthlyCostVND) + '" placeholder="0">' +
       '<p class="hint" id="hCost"></p>' +
+      '<div id="wAnchor"' + (sameD ? ' class="hide"' : "") + ">" +
       '<label class="fl" for="fAnchor">Ngày trả của tuần 1 (mốc chu kỳ)</label>' +
       '<input class="in" id="fAnchor" type="date" value="' + esc(f.anchor) + '">' +
+      "</div>" +
       '<p class="hint" id="hAnchor"></p>' +
       (a ? '<label class="check"><input type="checkbox" id="fReset"><span>Đặt lại số tuần đã trả của chu kỳ này về 0</span></label>' : "") +
 
@@ -1841,6 +1853,7 @@ svg { flex: none; }
     sheet(a ? "Sửa " + esc(a.name) : "Thêm tài khoản", body, foot, true);
 
     var manual = !!f.perPayoutManual;
+    var split = !sameD;   /* true = ba ngày đặt riêng; false = hai mốc bám theo ngày thuê */
     var $ = function (id) { return document.getElementById(id); };
 
     function refresh() {
@@ -1853,6 +1866,9 @@ svg { flex: none; }
       var anchor = $("fAnchor").value || todayISO();
       var pr = inc * S.rate - cost;
 
+      $("hRent").innerHTML = split
+        ? "Ba mốc đang đặt riêng. Sửa ngày thuê sẽ không kéo theo hai mốc bên dưới."
+        : "Mốc trả tuần 1 và mốc nhận lần 1 <b>tự bằng ngày thuê</b> — không phải chỉnh riêng.";
       $("hInc").innerHTML = "= " + vnd(inc * S.rate) + " theo tỷ giá " + NF.format(S.rate);
       $("hPer").innerHTML = "= " + vnd(per * S.rate) + " · " + (Math.round(30 / cdv * 10) / 10) + " lần / tháng" +
         (manual ? ' <button class="link inline" id="reAuto">Tính lại tự động</button>' : "");
@@ -1871,7 +1887,23 @@ svg { flex: none; }
       if (ra) ra.onclick = function () { manual = false; $("fPer").value = ""; refresh(); };
     }
 
-    ["fInc", "fCd", "fCost", "fAnchor", "fPAnchor"].forEach(function (id) { $(id).addEventListener("input", refresh); });
+    ["fInc", "fCd", "fCost"].forEach(function (id) { $(id).addEventListener("input", refresh); });
+
+    /* ngày thuê là mốc chủ: chưa tách thì hai mốc kia bám theo */
+    $("fRent").addEventListener("input", function () {
+      if (!split && this.value) { $("fAnchor").value = this.value; $("fPAnchor").value = this.value; }
+      refresh();
+    });
+    /* chạm tay vào một trong hai mốc = tự động tách, không bám theo nữa */
+    ["fAnchor", "fPAnchor"].forEach(function (id) {
+      $(id).addEventListener("input", function () { split = true; refresh(); });
+    });
+    $("splitD").addEventListener("click", function () {
+      split = true;
+      $("wAnchor").className = ""; $("wPAnchor").className = "";
+      this.className = "link hide";
+      refresh();
+    });
     $("fPer").addEventListener("input", function () { manual = true; refresh(); });
     $("cdChips").addEventListener("click", function (e) {
       var b = e.target.closest("[data-cd]"); if (!b) return;
