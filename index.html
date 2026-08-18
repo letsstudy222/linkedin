@@ -731,6 +731,16 @@ svg { flex: none; }
     if (!Array.isArray(a.log)) a.log = [];
     if (typeof a.paidWeeks !== "number") a.paidWeeks = 0;
     if (!a.anchorDay) a.anchorDay = fromISO(a.anchor || a.rentDate || todayISO()).getDate();
+
+    /* NGÀY GỐC BẤT BIẾN — nhập một lần, không bao giờ bị ghi đè.
+       a.anchor / a.payAnchor chỉ là mốc của chu kỳ ĐANG chạy, suy ra từ
+       ngày gốc + số chu kỳ đã hoàn tất. Sổ cũ được dựng ngược lại từ đây. */
+    var _cd = num(a.payoutCycleDays) || 15;
+    var _per = Math.max(1, Math.round(30 / _cd));
+    if (typeof a.payCycles !== "number") a.payCycles = Math.floor((a.log || []).length / 4);
+    if (typeof a.recvCycles !== "number") a.recvCycles = Math.floor((a.recvLog || []).length / _per);
+    if (!a.anchor0) a.anchor0 = addMonthsClamp(a.anchor, -a.payCycles, a.anchorDay);
+    if (!a.payAnchor0) a.payAnchor0 = addMonthsClamp(a.payAnchor, -a.recvCycles, a.payAnchorDay);
     return a;
   }
 
@@ -828,9 +838,10 @@ svg { flex: none; }
      Xoá một lần block thì lịch tự lùi về đúng, không cần thao tác bù. */
   /* Tổng ngày chết — chỉ dùng cho thống kê hiển thị */
   function shiftOf(a) {
-    var n = 0, today = todayISO();
+    var n = 0;
     (a.blocks || []).forEach(function (b) {
-      var k = diffDays(b.from, b.to || today);
+      if (!b.to) return;              /* chưa đóng thì chưa dời lịch */
+      var k = diffDays(b.from, b.to);
       if (k > 0) n += k;
     });
     return n;
@@ -847,7 +858,9 @@ svg { flex: none; }
     });
     var eff = base;
     for (var i = 0; i < bs.length; i++) {
-      var days = diffDays(bs[i].from, bs[i].to || today);
+      /* block CHƯA đóng -> lịch đứng yên. Chỉ dời đúng một lần, khi bấm "Đã mở lại". */
+      if (!bs[i].to) continue;
+      var days = diffDays(bs[i].from, bs[i].to);
       if (days > 0 && bs[i].from < eff) eff = addDays(eff, days);
     }
     return eff;
@@ -976,6 +989,7 @@ svg { flex: none; }
     if (seq >= d.per) {
       var tot = d.cycGot + amt, sh = d.cycExpect - tot;
       a.payAnchor = addMonthsClamp(a.payAnchor, 1, a.payAnchorDay);
+      a.recvCycles = num(a.recvCycles) + 1;
       a.gotCount = 0;
       audit("Nhận tiền", a.name, "lần " + seq + "/" + d.per + " · " + usdF(amt) +
         " · chốt chu kỳ: thực nhận " + usdF(tot) + "/" + usdF(d.cycExpect) +
@@ -1031,6 +1045,7 @@ svg { flex: none; }
     var last = a.recvLog.pop();
     var per = Math.max(1, Math.round(30 / (num(a.payoutCycleDays) || 15)));
     if (last.seq >= per) { a.gotCount = per - 1; a.payAnchor = last.cycleAnchor;
+      a.recvCycles = Math.max(0, num(a.recvCycles) - 1);
       a.payAnchorDay = fromISO(a.payAnchor).getDate(); }
     else { a.gotCount = Math.max(0, num(a.gotCount) - 1); }
     audit("Hoàn tác", a.name, "bỏ lần nhận " + last.seq + " · " + usdF(last.amountUSD));
@@ -1083,6 +1098,7 @@ svg { flex: none; }
       amountVND: Math.round(num(a.monthlyCostVND) / 4), cycleAnchor: a.anchor, name: a.name });
     if (week === 4) {
       a.anchor = addMonthsClamp(a.anchor, 1, a.anchorDay);
+      a.payCycles = num(a.payCycles) + 1;
       a.paidWeeks = 0;
       audit("Thanh toán", a.name, "tuần 4/4 · " + vnd(num(a.monthlyCostVND) / 4) + " · chốt chu kỳ, mốc mới " + dmy(a.anchor));
       toast(a.name + ": xong 4/4 tuần. Chu kỳ mới bắt đầu " + dmy(a.anchor));
@@ -1097,7 +1113,8 @@ svg { flex: none; }
   function undoLast(id) {
     var a = byId(id); if (!a || !a.log || !a.log.length) return;
     var last = a.log.pop();
-    if (last.week === 4) { a.paidWeeks = 3; a.anchor = last.cycleAnchor; }
+    if (last.week === 4) { a.paidWeeks = 3; a.anchor = last.cycleAnchor;
+      a.payCycles = Math.max(0, num(a.payCycles) - 1); }
     else { a.paidWeeks = Math.max(0, a.paidWeeks - 1); }
     audit("Hoàn tác", a.name, "bỏ lần trả tuần " + last.week + "/4");
     save(); render(); toast("Đã hoàn tác lần trả gần nhất");
@@ -1787,11 +1804,14 @@ svg { flex: none; }
     var t = todayISO();
     var f = a || { name: "", rentDate: t, monthlyIncomeUSD: "", payoutCycleDays: 15, perPayoutUSD: "",
       perPayoutManual: false, connections: "", monthlyCostVND: "", anchor: t, payAnchor: t,
-      note: "", active: true, seq: 0 };
+      anchor0: t, payAnchor0: t, note: "", active: true, seq: 0 };
     var cd = num(f.payoutCycleDays) || 15;
+    /* form luôn làm việc với NGÀY GỐC, không phải mốc chu kỳ đang chạy */
+    var a0 = f.anchor0 || f.anchor || f.rentDate || t;
+    var p0 = f.payAnchor0 || f.payAnchor || f.rentDate || t;
     /* Mặc định: ngày thuê = mốc trả tuần 1 = mốc nhận lần 1.
        Chỉ tách ra khi sổ cũ đã lệch, hoặc khi người dùng bấm nút tách. */
-    var sameD = !a || ((f.anchor || f.rentDate) === f.rentDate && (f.payAnchor || f.rentDate) === f.rentDate);
+    var sameD = !a || (a0 === f.rentDate && p0 === f.rentDate);
 
     var body =
       '<div class="sec first">Thông tin thuê</div>' +
@@ -1826,8 +1846,8 @@ svg { flex: none; }
       '<p class="hint" id="hPer"></p>' +
 
       '<div id="wPAnchor"' + (sameD ? ' class="hide"' : "") + ">" +
-      '<label class="fl" for="fPAnchor">Ngày nhận lần 1 (mốc chu kỳ nhận)</label>' +
-      '<input class="in" id="fPAnchor" type="date" value="' + esc(f.payAnchor || f.rentDate || t) + '">' +
+      '<label class="fl" for="fPAnchor">Ngày nhận lần 1 — cố định, không tự đổi</label>' +
+      '<input class="in" id="fPAnchor" type="date" value="' + esc(p0) + '">' +
       "</div>" +
       '<p class="hint" id="hPAnchor"></p>' +
 
@@ -1836,8 +1856,8 @@ svg { flex: none; }
       '<input class="in mono" id="fCost" type="number" inputmode="numeric" value="' + esc(f.monthlyCostVND) + '" placeholder="0">' +
       '<p class="hint" id="hCost"></p>' +
       '<div id="wAnchor"' + (sameD ? ' class="hide"' : "") + ">" +
-      '<label class="fl" for="fAnchor">Ngày trả của tuần 1 (mốc chu kỳ)</label>' +
-      '<input class="in" id="fAnchor" type="date" value="' + esc(f.anchor) + '">' +
+      '<label class="fl" for="fAnchor">Ngày trả tuần 1 — cố định, không tự đổi</label>' +
+      '<input class="in" id="fAnchor" type="date" value="' + esc(a0) + '">' +
       "</div>" +
       '<p class="hint" id="hAnchor"></p>' +
       (a ? '<label class="check"><input type="checkbox" id="fReset"><span>Đặt lại số tuần đã trả của chu kỳ này về 0</span></label>' : "") +
@@ -1927,15 +1947,25 @@ svg { flex: none; }
     }
     var cd = num($("fCd").value) || 15;
     var inc = num($("fInc").value);
-    var anchor = $("fAnchor").value || todayISO();
+    var anchor0 = $("fAnchor").value || todayISO();
+    var payAnchor0 = $("fPAnchor").value || todayISO();
+    var anchorDay = fromISO(anchor0).getDate();
+    var payAnchorDay = fromISO(payAnchor0).getDate();
+    /* số chu kỳ đã hoàn tất — giữ nguyên của sổ cũ, tài khoản mới thì bằng 0 */
+    var old = editId ? (byId(editId) || {}) : {};
+    var pc = num(old.payCycles), rc = num(old.recvCycles);
     var data = {
       name: name, rentDate: $("fRent").value || todayISO(),
       monthlyIncomeUSD: inc, payoutCycleDays: cd,
       perPayoutUSD: num($("fPer").value), perPayoutManual: Math.abs(num($("fPer").value) - inc * cd / 30) > 0.01,
       connections: num($("fConn").value), monthlyCostVND: num($("fCost").value),
-      anchor: anchor, anchorDay: fromISO(anchor).getDate(),
-      payAnchor: $("fPAnchor").value || todayISO(),
-      payAnchorDay: fromISO($("fPAnchor").value || todayISO()).getDate(),
+      /* ngày gốc: người dùng nhập, KHÔNG bao giờ bị app ghi đè */
+      anchor0: anchor0, payAnchor0: payAnchor0,
+      anchorDay: anchorDay, payAnchorDay: payAnchorDay,
+      payCycles: pc, recvCycles: rc,
+      /* mốc chu kỳ đang chạy: luôn suy ra từ ngày gốc + số chu kỳ đã xong */
+      anchor: addMonthsClamp(anchor0, pc, anchorDay),
+      payAnchor: addMonthsClamp(payAnchor0, rc, payAnchorDay),
       note: $("fNote").value, active: true, seq: num($("fSeq").value)
     };
     if (!data.seq) { var mq = 0; S.accounts.forEach(function (x) { if (num(x.seq) > mq) mq = num(x.seq); });
@@ -2540,9 +2570,9 @@ svg { flex: none; }
     R.push([H(L.ccyc), C(d.closedCyc)]);
     R.push([H(L.fill), C(Math.round(d.fill * 100) + "%")]);
     R.push([H(L.short), C(Math.round(d.shortUSD * 100) / 100)]);
-    R.push([H(L.anc), C(D(a.anchor))]);
+    R.push([H(L.anc), C(D(a.anchor0 || a.anchor))]);
     R.push([H(L.ancE), C(D(d.anc))]);
-    R.push([H(L.panc), C(D(a.payAnchor))]);
+    R.push([H(L.panc), C(D(a.payAnchor0 || a.payAnchor))]);
     R.push([H(L.pancE), C(D(d.panc))]);
     R.push([]);
 
