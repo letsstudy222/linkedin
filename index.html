@@ -204,6 +204,36 @@ svg { flex: none; }
 .vd.v-keep { color: var(--green); } .vd.v-watch { color: var(--amber); }
 .vd.v-drop { color: var(--red); } .vd.v-new { color: var(--muted); }
 
+/* mảng trong thẻ — mỗi dòng tiền một nền riêng.
+   Giữ đúng quy ước màu sẵn có: tím = tiền phải trả, xanh = tiền nhận về. */
+.pane { border: 1px solid var(--rule); border-radius: 13px;
+  padding: 10px 11px 11px 13px; margin-top: 10px; }
+.pane-pay { background: #F6F5FD; border-color: #E1DFF5; box-shadow: inset 3px 0 0 #B9B6E6; }
+.pane-recv { background: #F1F9F6; border-color: #D5E8E0; box-shadow: inset 3px 0 0 #9CCBBB; }
+.pane-fin { background: var(--panel2); padding: 11px 11px 12px; }
+.pane-pay .cyc-l { color: var(--carbon); }
+.pane-recv .cyc-l { color: var(--green); }
+.pane .cyc { margin-bottom: 8px; }
+/* ô chưa đánh dấu chuyển sang nền trắng để nổi trên mảng có màu */
+.pane .cell:not(.next):not(.late):not(.paid) { background: var(--panel); }
+.pane .cell.paid { background: rgba(255, 255, 255, .6); }
+.pane .prog.sm { margin: 9px 0 0; padding: 8px 0 0; border-top: 1px solid var(--rule2); }
+.pane .due-note { margin-top: 7px; }
+.pane-fin .m { background: var(--panel); }
+.pane-fin .mfoot { margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--rule); }
+
+/* điện thoại: thẻ hẹp hơn, mảng cần tách rõ hơn nữa */
+@media (max-width: 640px) {
+  .card { padding: 12px 11px 9px; }
+  .pane { padding: 9px 9px 10px 12px; margin-top: 9px; border-radius: 12px; }
+  .pane-fin { padding: 10px 9px 11px; }
+  .cell { padding: 7px 3px 6px; border-radius: 9px; }
+  .cell-d { font-size: 11.5px; }
+  /* hàng nút cuối thẻ: dàn đều một dòng, không xuống dòng gãy chữ */
+  .c-act { gap: 4px; justify-content: space-between; }
+  .c-act .link { font-size: 11px; gap: 3px; white-space: nowrap; }
+}
+
 /* sắp xếp */
 .sortsel { border: 1px solid var(--rule); background: var(--panel); border-radius: 13px; padding: 7px 9px;
   font-size: 12.5px; color: var(--ink2); outline: none; }
@@ -1190,7 +1220,7 @@ svg { flex: none; }
         (d.shiftRecv ? " (gốc " + dmy(d.payDuesBase[d.gc]) + ", dời " + d.shiftRecv + " ngày vì block)" : "");
 
     var recvHTML = off ? "" :
-      '<div class="perf"></div>' +
+      '<section class="pane pane-recv">' +
       '<div class="cyc"><span class="cyc-l">Chu kỳ nhận · ' + d.cd + ' ngày' +
       (d.shiftCycR ? '<b class="shf">+' + d.shiftCycR + ' ngày</b>' : "") +
       '</span><span class="cyc-v mono">' + dm(d.payDues[0]) + " → " + dm(d.payDues[d.per - 1]) + "</span></div>" +
@@ -1204,7 +1234,8 @@ svg { flex: none; }
       '<div class="due-note">' + rNote + "</div>" +
       '<div class="prog sm"><div class="prog-h"><span>Chu kỳ này</span><span class="mono">' +
       usdF(d.cycGot) + " / " + usdF(d.cycExpect) + '</span></div><div class="prog-bar"><i style="width:' +
-      Math.min(100, d.cycExpect > 0 ? d.cycGot / d.cycExpect * 100 : 0) + '%"></i></div></div>';
+      Math.min(100, d.cycExpect > 0 ? d.cycGot / d.cycExpect * 100 : 0) + '%"></i></div></div>' +
+      "</section>";
 
     /* đã nhận trong tháng dương lịch này */
     var mk = todayISO().slice(0, 7), gotM = 0;
@@ -1216,15 +1247,16 @@ svg { flex: none; }
       '<div class="c-meta">thuê ' + dmy(a.rentDate) + " · " + num(a.connections) + " kết nối</div></div>" +
       '<span class="badge ' + st[1] + '">' + st[0] + "</span></div>" +
       barHTML +
-      '<div class="perf"></div>' +
+      '<section class="pane pane-pay">' +
       '<div class="cyc"><span class="cyc-l">Chu kỳ trả' +
       (d.shiftCycP ? '<b class="shf">+' + d.shiftCycP + ' ngày</b>' : "") +
       '</span><span class="cyc-v mono">' + dm(d.dues[0]) + " → " + dm(d.dues[3]) + "</span></div>" +
       '<div class="punch">' + punch + "</div>" +
       actionHTML +
+      "</section>" +
       recvHTML +
-      '<div class="perf"></div>' +
 
+      '<section class="pane pane-fin">' +
       '<div class="mgrid">' +
       '<div class="m"><div class="m-l">Lãi thực / tháng</div><div class="m-v ' +
       (d.realProfit >= 0 ? "t-green" : "t-red") + '">' + vnd(d.realProfit) + "</div>" +
@@ -1241,6 +1273,7 @@ svg { flex: none; }
 
       '<div class="mfoot"><span>Đã nhận tháng này <b>' + usdF(gotM) + "</b> / " + usdF(a.monthlyIncomeUSD) +
       "</span><span>" + usdF(d.perUSD) + " × " + d.per + " lần</span></div>" +
+      "</section>" +
 
       '<div class="tl"><div class="tl-bar" style="background:' + timelineBG(a, d.span) + '"></div>' +
       '<div class="tl-cap"><span class="vd v-' + v.k + '">' + v.l + " — " + v.r + "</span>" +
